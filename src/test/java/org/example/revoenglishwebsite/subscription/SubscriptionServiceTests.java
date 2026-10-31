@@ -13,7 +13,15 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.security.access.AccessDeniedException;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.Callable;
+import java.util.concurrent.CyclicBarrier;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -236,6 +244,20 @@ class SubscriptionServiceTests {
     }
 
     @Test
+    void simultaneousDoubleSubmitsAreRecordedOnlyOnce() throws Exception {
+        Subscription sub = active(student, "regular");
+        String assignKey = key();
+        String ref = "lesson-" + UUID.randomUUID();
+
+        List<Outcome<?>> assigned = twiceAtOnce(() -> subscriptions.assign(student, "start", today, today.plusDays(30), null, admin, assignKey));
+        List<Outcome<?>> consumed = twiceAtOnce(() -> credits.consumeLesson(student, ref, today, null, admin));
+
+        assertThat(assigned).extracting(Outcome::created).containsExactlyInAnyOrder(true, false);
+        assertThat(consumed).extracting(Outcome::created).containsExactlyInAnyOrder(true, false);
+        assertThat(credits.balanceOf(sub.getId())).isEqualTo(new CreditBalance(8, 0, 1, 7));
+    }
+
+    @Test
     void balanceNeverGoesNegative() {
         Subscription sub = active(student, "start");
         for (int i = 0; i < 4; i++) {
@@ -323,6 +345,23 @@ class SubscriptionServiceTests {
 
     private static String key() {
         return UUID.randomUUID().toString();
+    }
+
+    /** Sends the same request from two threads at the same moment, like a double click on a form button. */
+    private static List<Outcome<?>> twiceAtOnce(Callable<Outcome<?>> request) throws Exception {
+        CyclicBarrier start = new CyclicBarrier(2);
+        Callable<Outcome<?>> together = () -> {
+            start.await();
+            return request.call();
+        };
+        try (ExecutorService pool = Executors.newFixedThreadPool(2)) {
+            List<Future<Outcome<?>>> results = List.of(pool.submit(together), pool.submit(together));
+            List<Outcome<?>> outcomes = new ArrayList<>();
+            for (Future<Outcome<?>> result : results) {
+                outcomes.add(result.get(30, TimeUnit.SECONDS));
+            }
+            return outcomes;
+        }
     }
 
     private static String unique(String prefix) {

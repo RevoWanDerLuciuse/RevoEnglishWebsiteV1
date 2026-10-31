@@ -61,7 +61,7 @@ All settings have safe defaults; production values are passed as environment var
 | `ADMIN_BOOTSTRAP_LOGIN`  | *(empty)*           | One-time creation of the first administrator (see *Student portal*). |
 | `ADMIN_BOOTSTRAP_PASSWORD` | *(empty)*         | Password for that administrator, ≥ 10 characters. **Secret — remove after the first start.** |
 | `ADMIN_BOOTSTRAP_NAME`   | `Администратор`     | Display name for that administrator. |
-| `PORTAL_TIME_ZONE`       | `Europe/Moscow`     | Time zone of subscription start/end dates and the daily expiry job. |
+| `PORTAL_TIME_ZONE`       | `Asia/Ho_Chi_Minh`  | Time zone of subscription start/end dates and the daily expiry job (Vietnam, UTC+7). Use `Europe/Moscow` for Moscow time. |
 
 The same settings can be given as Spring properties (`site.telegram-username`, `site.base-url`,
 `site.analytics-debug`, `server.port`) in `application.yaml` or on the command line.
@@ -89,7 +89,8 @@ The project builds into one self-contained executable jar. Any host that can run
    ```bash
    ./gradlew clean build
    ```
-   Output: `build/libs/RevoEnglishWebsite-0.0.1-SNAPSHOT.jar`.
+   Output: `build/libs/RevoEnglishWebsite-0.0.1-SNAPSHOT.jar`. GitHub Actions (`.github/workflows/build.yml`) runs
+   the same build with all tests on every push to `master` and on every pull request — deploy only a green build.
 2. **Copy** the jar to the server and **run** it with Java 25:
    ```bash
    export SPRING_PROFILES_ACTIVE=prod
@@ -103,7 +104,9 @@ The project builds into one self-contained executable jar. Any host that can run
    Keep it running with your platform's process manager (systemd service, container platform, PaaS, …).
    On start, Flyway creates/updates the tables automatically. Back up the database regularly — it holds the accounts.
 3. **Put HTTPS in front**: point your domain at a reverse proxy / load balancer that terminates TLS and forwards
-   to the app's port, passing `X-Forwarded-For` and `X-Forwarded-Proto`. Example for nginx (adapt to your setup):
+   to the app's port, passing `X-Forwarded-For` and `X-Forwarded-Proto`. The login limit counts failed attempts per
+   visitor address taken from `X-Forwarded-For`; without it every visitor would share the proxy's address.
+   Example for nginx (adapt to your setup):
    ```nginx
    location / {
        proxy_pass         http://127.0.0.1:8080;
@@ -121,9 +124,15 @@ The project builds into one self-contained executable jar. Any host that can run
 
 ### Container image (optional)
 
-A `Dockerfile` is included for hosts that deploy containers. **It has not been built or tested yet** — run
-`docker build -t revo-english .` and `docker run -p 8080:8080 -e SITE_BASE_URL=... revo-english` locally before using it.
-The image sets `SPRING_PROFILES_ACTIVE=prod` and runs as a non-root user.
+A `Dockerfile` is included for hosts that deploy containers (verified: the image builds, starts against PostgreSQL 17,
+reports healthy and runs as a non-root user). It sets `SPRING_PROFILES_ACTIVE=prod`; pass the same environment
+variables as above, at least the database ones:
+```bash
+docker build -t revo-english .
+docker run -p 8080:8080 -e SPRING_DATASOURCE_URL=... -e SPRING_DATASOURCE_USERNAME=... \
+  -e SPRING_DATASOURCE_PASSWORD=... -e SITE_BASE_URL=... revo-english
+```
+Note that the image build skips the tests (`bootJar`); rely on the CI build for those.
 
 ---
 
@@ -180,6 +189,9 @@ On the same page you can **disable / enable** access (takes effect immediately, 
   `/account/**` any signed-in user; anonymous visitors are redirected to `/login`. Public pages stay public.
 - Passwords are hashed with BCrypt (`{bcrypt}…` via Spring's delegating encoder); 10 characters to 72 bytes.
 - Same message for unknown login, wrong password and disabled account. CSRF tokens on every form (login and logout too).
+- Password guessing is limited: after 10 failed sign-ins from one address within 15 minutes, that address cannot try
+  again until the 15 minutes have passed (`LoginThrottle`; counted per address, so nobody can lock the teacher out from
+  elsewhere). The counters are kept in memory and reset on restart.
 - Session cookie: HttpOnly, SameSite=Lax, HTTPS-only in `prod`; the session id changes at sign-in; 60-minute timeout.
 - No account ids for "my" data in URLs — the dashboard uses the signed-in account only. The role is never read from a
   request; the student form has no role field.
@@ -241,7 +253,7 @@ been cancelled.
 Payment itself, refunds, and which cancellations give a lesson back are the teacher's decisions; the portal records
 the outcome («Оплата получена», «Отменить абонемент», «Вернуть», «Корректировка»). Unused lessons stay on an expired
 subscription (visible in the history); carry them over with a positive adjustment if you decide to.
-Default period: one calendar month (start → same day next month − 1); dates in `PORTAL_TIME_ZONE` (`Europe/Moscow`).
+Default period: one calendar month (start → same day next month − 1); dates in `PORTAL_TIME_ZONE` (`Asia/Ho_Chi_Minh`).
 
 ## Pricing
 
@@ -327,14 +339,18 @@ Set `SITE_ANALYTICS_DEBUG=true` temporarily to see events in the browser console
   (licences in `static/fonts/OFL-*.txt`).
 - CSS, fonts, images and the favicon get content-hashed URLs and are cached for a year. JavaScript modules are
   revalidated on each visit (cheap `304` responses), because they import each other by relative path.
-- HTML, CSS, JS, SVG and XML responses are gzip-compressed. The tutor photo is a 72 KB JPEG and is lazy-loaded.
+- HTML, CSS, JS, SVG and XML responses are gzip-compressed. The tutor photo (`static/images/emir.jpg`) is a
+  720 × 960 JPEG of about 110 KB and is lazy-loaded. When replacing it, keep the 3:4 format and the file name:
+  the page, the link previews (`og:image`) and the tests all expect `/images/emir.jpg`.
 
 ## Tests
 
 `./gradlew test` covers page rendering, links and anchors, contextual Telegram drafts, exercise data, SEO tags,
 robots/sitemap in both modes, security headers, caching, compression, error pages, CSRF and the health endpoint —
 plus the student portal: access control per role, login/logout, forced password change, deactivation, account
-creation, duplicate logins, password hashing, administrator bootstrap and that no password appears in the logs —
+creation, duplicate logins, password hashing, the failed-login limit, administrator bootstrap and that no password
+appears in the logs —
 and subscriptions: plan allocation and pricing, activation/expiry, balance calculation, consume/restore, adjustments,
-duplicate submissions, rollback of a failed activation, ownership checks and student access.
+duplicate submissions (including two at the same moment), rollback of a failed activation, ownership checks and
+student access.
 Tests use an in-memory H2 database in PostgreSQL mode (`src/test/resources/config/application.yaml`).

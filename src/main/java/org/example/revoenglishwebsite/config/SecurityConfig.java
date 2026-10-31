@@ -1,6 +1,7 @@
 package org.example.revoenglishwebsite.config;
 
 import org.springframework.context.annotation.Bean;
+import org.example.revoenglishwebsite.account.LoginThrottle;
 import org.example.revoenglishwebsite.account.PortalLoginSuccessHandler;
 import org.example.revoenglishwebsite.account.Role;
 import org.springframework.context.annotation.Configuration;
@@ -8,6 +9,7 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.crypto.factory.PasswordEncoderFactories;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.security.web.header.writers.ReferrerPolicyHeaderWriter.ReferrerPolicy;
 import org.springframework.security.web.header.writers.CrossOriginOpenerPolicyHeaderWriter.CrossOriginOpenerPolicy;
 
@@ -49,7 +51,7 @@ public class SecurityConfig {
     // Everything else stays public so unknown URLs still get the normal 404 page.
     // CSRF protection is on (Spring Security default) for every form, including login and logout.
     @Bean
-    SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+    SecurityFilterChain securityFilterChain(HttpSecurity http, LoginThrottle loginThrottle) throws Exception {
         return http
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/admin", "/admin/**").hasRole(Role.ADMIN.name())
@@ -61,8 +63,10 @@ public class SecurityConfig {
                         .usernameParameter("login")
                         .passwordParameter("password")
                         .successHandler(new PortalLoginSuccessHandler())
-                        // Same message for unknown login, wrong password and disabled account
-                        .failureUrl("/login?error"))
+                        // Same message for unknown login, wrong password and disabled account; each failure is counted
+                        .failureHandler(loginThrottle.failureHandler()))
+                // Too many failures from one address: further attempts are refused before the password is checked
+                .addFilterBefore(loginThrottle.filter(), UsernamePasswordAuthenticationFilter.class)
                 .logout(logout -> logout
                         .logoutUrl("/logout")
                         .logoutSuccessUrl("/login?logout")

@@ -10,7 +10,7 @@ import java.time.ZoneId;
 
 /**
  * "Today" for subscription dates. The application runs in UTC, but start and expiry dates are calendar days in
- * the business time zone ({@code portal.time-zone}, default Europe/Moscow).
+ * the business time zone ({@code portal.time-zone}, see application.yaml).
  */
 @Component
 public class BusinessCalendar {
@@ -18,7 +18,7 @@ public class BusinessCalendar {
     private final Clock clock;
     private final ZoneId zone;
 
-    public BusinessCalendar(@Value("${portal.time-zone:Europe/Moscow}") String zone) {
+    public BusinessCalendar(@Value("${portal.time-zone:Asia/Ho_Chi_Minh}") String zone) {
         this.clock = Clock.systemUTC();
         this.zone = ZoneId.of(zone);
     }

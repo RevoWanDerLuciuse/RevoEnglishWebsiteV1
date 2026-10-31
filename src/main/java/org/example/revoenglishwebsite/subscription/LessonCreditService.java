@@ -50,7 +50,8 @@ public class LessonCreditService {
         if (lessonDate == null) {
             throw new SubscriptionException("Укажите дату занятия.");
         }
-        Optional<CreditTransaction> existing = ledger.findByRequestKey(CreditTransaction.consumeKey(ref));
+        String key = CreditTransaction.consumeKey(ref);
+        Optional<CreditTransaction> existing = ledger.findByRequestKey(key);
         if (existing.isPresent()) {
             return new Outcome<>(ownedBy(existing.get(), studentId), false);
         }
@@ -59,6 +60,12 @@ public class LessonCreditService {
                 .findFirst()
                 .orElseThrow(() -> new SubscriptionException("На эту дату у ученика нет активного абонемента."));
         Subscription subscription = lock(candidate.getId());
+        // Checked again under the lock: a double-submitted form waits for the lock until the first request has
+        // committed, and must then find that consumption instead of failing on the unique key.
+        existing = ledger.findByRequestKey(key);
+        if (existing.isPresent()) {
+            return new Outcome<>(ownedBy(existing.get(), studentId), false);
+        }
         if (!subscription.isUsableOn(lessonDate)) {
             throw new SubscriptionException("На эту дату у ученика нет активного абонемента.");
         }

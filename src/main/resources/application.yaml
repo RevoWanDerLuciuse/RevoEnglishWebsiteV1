@@ -67,7 +67,9 @@ management:
 
 portal:
   # Calendar days of subscriptions (start/end dates, daily expiry) are counted in this time zone.
-  time-zone: ${PORTAL_TIME_ZONE:Asia/Saigon}
+  # Default: Vietnam time (UTC+7, the same zone as the legacy name "Asia/Saigon"). For Moscow time set
+  # PORTAL_TIME_ZONE=Europe/Moscow.
+  time-zone: ${PORTAL_TIME_ZONE:Asia/Ho_Chi_Minh}
 
 site:
   # Telegram username for all contact links (with or without "@").

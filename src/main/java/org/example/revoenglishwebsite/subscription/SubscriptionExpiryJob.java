@@ -25,7 +25,7 @@ class SubscriptionExpiryJob {
         this.calendar = calendar;
     }
 
-    @Scheduled(cron = "0 5 0 * * *", zone = "${portal.time-zone:Europe/Moscow}")
+    @Scheduled(cron = "0 5 0 * * *", zone = "${portal.time-zone:Asia/Ho_Chi_Minh}")
     void expireOverdueSubscriptions() {
         int expired = subscriptions.expireOverdue(calendar.today());
         if (expired > 0) {

@@ -10,6 +10,8 @@ import org.example.revoenglishwebsite.subscription.LessonCreditService;
 import org.example.revoenglishwebsite.subscription.Outcome;
 import org.example.revoenglishwebsite.subscription.SubscriptionException;
 import org.example.revoenglishwebsite.subscription.SubscriptionService;
+import org.springframework.dao.ConcurrencyFailureException;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -166,6 +168,10 @@ public class AdminSubscriptionController {
                     : "Эта операция уже была записана — повторная отправка ничего не изменила.");
         } catch (SubscriptionException e) {
             storeResult(session, studentId, "error", e.getMessage());
+        } catch (DataIntegrityViolationException | ConcurrencyFailureException e) {
+            // Safety net for a conflicting simultaneous change: the database refused it and nothing was saved
+            storeResult(session, studentId, "error",
+                    "Не удалось сохранить: данные только что изменились. Проверьте страницу и при необходимости повторите.");
         }
         return "redirect:/admin/students/" + studentId + "/subscriptions";
     }
