@@ -1,0 +1,20 @@
+# Local PostgreSQL for development only (not used in production).
+#   export SPRING_DATASOURCE_PASSWORD=<choose a local password>
+#   docker compose up -d
+# The app's defaults (application.yaml) connect to localhost:5432/revoenglish as user "revoenglish".
+services:
+  postgres:
+    # bookworm variant: its time-zone data still includes legacy names such as "Asia/Saigon" (what Windows reports
+    # for Vietnam). The default postgres:17 image (Debian trixie) rejects them, which breaks IntelliJ Run-mode starts.
+    image: postgres:17-bookworm
+    environment:
+      POSTGRES_DB: revoenglish
+      POSTGRES_USER: revoenglish
+      POSTGRES_PASSWORD: ${SPRING_DATASOURCE_PASSWORD:?Set SPRING_DATASOURCE_PASSWORD before starting the database}
+    ports:
+      - "127.0.0.1:5432:5432"
+    volumes:
+      - revoenglish-db:/var/lib/postgresql/data
+
+volumes:
+  revoenglish-db:

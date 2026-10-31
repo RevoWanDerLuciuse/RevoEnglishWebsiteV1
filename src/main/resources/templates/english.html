@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="ru" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <th:block th:replace="~{fragments/layout :: common-head}"/>
+    <th:block th:replace="~{fragments/layout :: seo('General English — английский для жизни · Revo English', 'General English для взрослых: естественные выражения, построение фраз и повседневный разговор. Перестаньте переводить в голове и говорите своими словами.', '/english', true)}"/>
+    <link rel="stylesheet" th:href="@{/css/quiz.css}">
+    <link rel="stylesheet" th:href="@{/css/pricing.css}">
+    <link rel="stylesheet" th:href="@{/css/paths.css}">
+    <script type="module" th:src="@{/js/exercises/general-english.js}"></script>
+</head>
+<body data-analytics-page="general-english">
+
+<th:block th:replace="~{fragments/layout :: site-header('english')}"/>
+
+<main id="main">
+
+    <!-- 1. Hero -->
+    <section class="page-hero" aria-labelledby="page-title">
+        <div class="container">
+            <nav th:replace="~{fragments/layout :: breadcrumb('General English')}"></nav>
+
+            <div class="page-hero__grid">
+                <div>
+                    <p class="eyebrow">General English · английский для жизни</p>
+                    <h1 class="page-hero__title" id="page-title">Перестаньте переводить в&nbsp;голове&nbsp;— <em>говорите своими словами</em></h1>
+                    <p class="page-hero__lead">
+                        Для взрослых, которые хотят увереннее общаться: в&nbsp;поездках, с&nbsp;друзьями и&nbsp;коллегами, на&nbsp;любые темы.
+                        Учимся естественным фразам, строим предложения без долгих пауз и&nbsp;много разговариваем.
+                    </p>
+                    <div class="page-hero__actions">
+                        <a class="btn btn--primary" href="#pricing">
+                            Выбрать тариф
+                            <th:block th:replace="~{fragments/layout :: icon-arrow-down}"/>
+                        </a>
+                        <a class="btn btn--ghost" href="#exercise">
+                            Попробовать упражнение
+                            <th:block th:replace="~{fragments/layout :: icon-arrow-down}"/>
+                        </a>
+                    </div>
+                </div>
+
+                <aside class="page-hero__aside" aria-labelledby="fit-title">
+                    <h2 class="page-hero__aside-title" id="fit-title">Подойдёт, если вы</h2>
+                    <ul class="check-list" role="list">
+                        <li>понимаете больше, чем можете сказать;</li>
+                        <li>учили английский в&nbsp;школе или на&nbsp;курсах, но&nbsp;разговор так и&nbsp;не&nbsp;сложился;</li>
+                        <li>хотите вернуться к&nbsp;языку после перерыва;</li>
+                        <li>готовитесь к&nbsp;поездке или переезду.</li>
+                    </ul>
+                </aside>
+            </div>
+        </div>
+    </section>
+
+    <!-- 2. Problems -->
+    <section class="section" id="problems" aria-labelledby="problems-title">
+        <div class="container">
+            <header class="section-head">
+                <p class="section-index"><span>01</span>С&nbsp;чем работаем</p>
+                <h2 class="section-title" id="problems-title">Знакомые <em>трудности</em>&nbsp;— и&nbsp;что с&nbsp;ними делать</h2>
+                <p class="section-lead">
+                    Чаще всего мешает не&nbsp;«плохой уровень», а&nbsp;несколько конкретных привычек. С&nbsp;ними и&nbsp;работаем на&nbsp;занятиях.
+                </p>
+            </header>
+
+            <ul class="problem-grid" role="list">
+                <li class="problem">
+                    <h3 class="problem__title">Перевод с&nbsp;русского в&nbsp;голове</h3>
+                    <p class="problem__quote">«Сначала строю фразу по-русски, потом перевожу&nbsp;— и&nbsp;получается не&nbsp;то».</p>
+                    <p class="problem__fix"><span>Что делаем:</span> учимся думать готовыми английскими блоками&nbsp;— фразами и&nbsp;связками, которые можно сразу использовать.</p>
+                </li>
+                <li class="problem">
+                    <h3 class="problem__title">Не&nbsp;хватает слов</h3>
+                    <p class="problem__quote">«Знаю, что хочу сказать, но&nbsp;не&nbsp;могу подобрать слово».</p>
+                    <p class="problem__fix"><span>Что делаем:</span> собираем лексику вокруг ваших тем и&nbsp;учимся перефразировать&nbsp;— объяснять мысль теми словами, что уже есть.</p>
+                </li>
+                <li class="problem">
+                    <h3 class="problem__title">Сложно построить предложение</h3>
+                    <p class="problem__quote">«Путаюсь в&nbsp;порядке слов и&nbsp;временах».</p>
+                    <p class="problem__fix"><span>Что делаем:</span> берём несколько опорных конструкций и&nbsp;используем их в&nbsp;разговоре, пока они не&nbsp;станут привычными.</p>
+                </li>
+                <li class="problem">
+                    <h3 class="problem__title">Паузы и&nbsp;неуверенность</h3>
+                    <p class="problem__quote">«Пока думаю, разговор уже ушёл дальше».</p>
+                    <p class="problem__fix"><span>Что делаем:</span> тренируем короткие ответы и&nbsp;фразы, которые дают время подумать (<span class="en" lang="en">Let me think…</span>), в&nbsp;спокойном темпе и&nbsp;без оценок.</p>
+                </li>
+            </ul>
+        </div>
+    </section>
+
+    <!-- 3. Learning areas -->
+    <section class="section section--alt" id="areas" aria-labelledby="areas-title">
+        <div class="container">
+            <header class="section-head">
+                <p class="section-index"><span>02</span>Что практикуем</p>
+                <h2 class="section-title" id="areas-title">Три области <em>практики</em></h2>
+            </header>
+
+            <ol class="area-grid" role="list">
+                <li class="area">
+                    <span class="area__num" aria-hidden="true">01</span>
+                    <h3 class="area__title">Естественные выражения</h3>
+                    <p>Устойчивые сочетания и&nbsp;фразы, которые звучат по-английски, а&nbsp;не&nbsp;как перевод.</p>
+                    <ul class="area__examples" role="list" lang="en">
+                        <li>take a break</li>
+                        <li>make a decision</li>
+                        <li>I’m looking forward to it.</li>
+                    </ul>
+                </li>
+                <li class="area">
+                    <span class="area__num" aria-hidden="true">02</span>
+                    <h3 class="area__title">Построение предложений</h3>
+                    <p>Порядок слов, времена и&nbsp;связки&nbsp;— чтобы мысль складывалась в&nbsp;понятную фразу.</p>
+                    <ul class="area__examples" role="list" lang="en">
+                        <li>I’ve been living here for two years.</li>
+                        <li>What I mean is…</li>
+                        <li>The thing is,…</li>
+                    </ul>
+                </li>
+                <li class="area">
+                    <span class="area__num" aria-hidden="true">03</span>
+                    <h3 class="area__title">Повседневный разговор</h3>
+                    <p>Small talk, рассказы о&nbsp;себе, мнения и&nbsp;вопросы&nbsp;— в&nbsp;темпе живого общения.</p>
+                    <ul class="area__examples" role="list" lang="en">
+                        <li>How’s it going?</li>
+                        <li>Sounds good to me.</li>
+                        <li>What do you think about…?</li>
+                    </ul>
+                </li>
+            </ol>
+        </div>
+    </section>
+
+    <!-- 4. Exercise -->
+    <section class="section" id="exercise" aria-labelledby="exercise-title">
+        <div class="container practice__grid">
+            <header class="practice__intro">
+                <p class="section-index"><span>03</span>Упражнение</p>
+                <h2 class="section-title" id="exercise-title">Как сказать <em>естественно?</em></h2>
+                <p class="section-lead">
+                    Четыре бытовые фразы, которые часто переводят с&nbsp;русского слово в&nbsp;слово. Выберите естественный вариант и&nbsp;посмотрите разбор.
+                </p>
+                <ul class="practice__meta" role="list">
+                    <li>4 вопроса</li>
+                    <li>Разбор после каждого ответа</li>
+                </ul>
+            </header>
+
+            <div th:replace="~{fragments/quiz :: quiz('english-quiz', 'general-english', '#pricing', '#lessons', 'Дальше: как проходят занятия')}"></div>
+        </div>
+    </section>
+
+    <!-- 5. Lessons -->
+    <section class="section section--alt" id="lessons" aria-labelledby="lessons-title">
+        <div class="container">
+            <header class="section-head">
+                <p class="section-index"><span>04</span>Занятия</p>
+                <h2 class="section-title" id="lessons-title">Как могут проходить <em>индивидуальные занятия</em></h2>
+            </header>
+
+            <ol class="steps" role="list">
+                <li class="step">
+                    <h3 class="step__title">Знакомство</h3>
+                    <p>Обсуждаем ваши цели, интересы, опыт с&nbsp;языком и&nbsp;удобный темп.</p>
+                </li>
+                <li class="step">
+                    <h3 class="step__title">Программа под вас</h3>
+                    <p>Темы и&nbsp;материалы подбираются под ваши задачи и&nbsp;увлечения: фильмы, игры, путешествия, работа.</p>
+                </li>
+                <li class="step">
+                    <h3 class="step__title">Занятия онлайн в&nbsp;Discord</h3>
+                    <p>Разговор, разбор живых фраз, интерактивные доски, лингвистические игры и&nbsp;кроссворды.</p>
+                </li>
+                <li class="step">
+                    <h3 class="step__title">Практика между занятиями</h3>
+                    <p>В&nbsp;Telegram-канале&nbsp;— разборы сцен из&nbsp;фильмов и&nbsp;игр с&nbsp;двойными субтитрами и&nbsp;карточки для лексики.</p>
+                </li>
+            </ol>
+
+            <p class="honest-note">
+                Сколько времени займёт путь, зависит от&nbsp;стартового уровня, регулярности занятий и&nbsp;практики между ними.
+                Поэтому я&nbsp;не&nbsp;обещаю «свободный английский за&nbsp;N&nbsp;недель»&nbsp;— зато на&nbsp;каждом занятии вы много говорите и&nbsp;сразу используете новое.
+            </p>
+        </div>
+    </section>
+
+    <!-- 6. Pricing -->
+    <section th:replace="~{fragments/pricing :: pricing('05', false)}"></section>
+
+    <!-- 7. Contact -->
+    <section th:replace="~{fragments/layout :: path-contact('General English', 'Работаете в IT?', @{/it-english}, 'Посмотрите IT English')}"></section>
+
+</main>
+
+<footer th:replace="~{fragments/layout :: site-footer}"></footer>
+
+</body>
+</html>

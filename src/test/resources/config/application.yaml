@@ -1,0 +1,7 @@
+# Test-only overrides (classpath:/config/ takes precedence over the main application.yaml).
+# An in-memory H2 database in PostgreSQL compatibility mode; Flyway applies the same migrations as in production.
+spring:
+  datasource:
+    url: jdbc:h2:mem:revoenglish;MODE=PostgreSQL;DATABASE_TO_LOWER=TRUE;DEFAULT_NULL_ORDERING=HIGH;DB_CLOSE_DELAY=-1
+    username: sa
+    password: ""

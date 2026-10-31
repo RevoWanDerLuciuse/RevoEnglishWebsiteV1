@@ -1,0 +1,79 @@
+# Base configuration, safe for every environment. Production additions live in application-prod.yaml.
+# Environment variables are documented in README.md.
+
+server:
+  port: ${PORT:8080}
+  compression:
+    enabled: true
+    mime-types: text/html,text/css,text/javascript,application/javascript,application/json,application/xml,text/xml,text/plain,image/svg+xml
+  error:
+    # Never expose internals on error pages.
+    include-stacktrace: never
+    include-message: never
+    include-binding-errors: never
+    include-exception: false
+    whitelabel:
+      enabled: false
+  servlet:
+    session:
+      # Session id only in an HttpOnly cookie, never in URLs. "secure" is added in the prod profile.
+      tracking-modes: cookie
+      timeout: 60m
+      cookie:
+        http-only: true
+        same-site: lax
+
+spring:
+  application:
+    name: RevoEnglishWebsite
+  # PostgreSQL. URL and user have local-development defaults (see compose.yaml); the password has none.
+  # In production set SPRING_DATASOURCE_URL, SPRING_DATASOURCE_USERNAME and SPRING_DATASOURCE_PASSWORD.
+  datasource:
+    url: jdbc:postgresql://localhost:5432/revoenglish
+    username: revoenglish
+  jpa:
+    open-in-view: false
+    hibernate:
+      # The schema is owned by Flyway (src/main/resources/db/migration); Hibernate only checks it.
+      ddl-auto: validate
+  web:
+    # All content is Russian: send "Content-Language: ru" regardless of the visitor's browser settings.
+    locale: ru
+    locale-resolver: fixed
+    resources:
+      chain:
+        strategy:
+          content:
+            # Content-hashed URLs (e.g. /css/site-3f2a….css) so these files can be cached for a year.
+            # JavaScript is excluded on purpose, see WebConfig.
+            enabled: true
+            # Patterns are also matched against the hashed URL, hence "favicon*.svg".
+            paths: /css/**,/fonts/**,/images/**,/favicon*.svg
+      cache:
+        cachecontrol:
+          max-age: 365d
+          cache-public: true
+
+management:
+  endpoints:
+    web:
+      exposure:
+        # Only the health check is reachable over HTTP; it reports UP/DOWN without details.
+        include: health
+  endpoint:
+    health:
+      probes:
+        enabled: true
+
+portal:
+  # Calendar days of subscriptions (start/end dates, daily expiry) are counted in this time zone.
+  time-zone: ${PORTAL_TIME_ZONE:Asia/Saigon}
+
+site:
+  # Telegram username for all contact links (with or without "@").
+  telegram-username: ${SITE_TELEGRAM_USERNAME:RevoWanDerLuciuse}
+  # Public origin, e.g. https://your-domain.example — PLACEHOLDER until the domain is known.
+  # While empty: no canonical URLs or sitemap, and robots.txt / meta robots ask search engines not to index.
+  base-url: ${SITE_BASE_URL:}
+  # Log analytics events to the browser console (for checking an analytics integration).
+  analytics-debug: ${SITE_ANALYTICS_DEBUG:false}

@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="ru" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <th:block th:replace="~{fragments/layout :: common-head}"/>
+    <th:block th:replace="~{fragments/layout :: seo('Личный кабинет · Revo English', 'Личный кабинет ученика Revo English.', '/dashboard', false)}"/>
+    <link rel="stylesheet" th:href="@{/css/portal.css}">
+</head>
+<body>
+
+<th:block th:replace="~{fragments/layout :: portal-header('dashboard')}"/>
+
+<main id="main" class="portal">
+    <div class="container">
+        <p th:if="${notice}" class="portal-alert portal-alert--success" role="status" th:text="${notice}">Пароль изменён.</p>
+
+        <header class="portal-head">
+            <p class="eyebrow">Личный кабинет</p>
+            <h1 class="portal-title">Здравствуйте, <em th:text="${me.displayName}">Ученик</em>!</h1>
+            <p class="portal-status">
+                <span class="portal-status__dot" aria-hidden="true"></span>
+                Вы вошли как <strong th:text="${me.login}">login</strong>
+            </p>
+        </header>
+
+        <div class="portal-grid">
+            <!--/* Only the signed-in student's own subscription. No prices or payment records are shown here. */-->
+            <section class="portal-card" th:classappend="${plan.current() == null} ? 'portal-placeholder'" aria-labelledby="plan-title">
+                <h2 class="portal-card__title" id="plan-title">Абонемент и&nbsp;занятия</h2>
+
+                <th:block th:if="${plan.current() != null}" th:with="c=${plan.current()}">
+                    <p class="plan-now__name">
+                        Тариф <strong th:text="${c.planName()}">Regular</strong>
+                        <span class="badge badge--on" th:text="${c.statusLabel()}">Активен</span>
+                    </p>
+                    <p class="plan-now__dates">
+                        Действует с&nbsp;<span th:text="${#temporals.format(c.startsOn(), 'dd.MM.yyyy')}">01.01.2026</span>
+                        по&nbsp;<span th:text="${#temporals.format(c.expiresOn(), 'dd.MM.yyyy')}">31.01.2026</span> включительно
+                    </p>
+                    <dl class="stats">
+                        <div><dt>Всего занятий</dt><dd th:text="${c.balance().totalIncluded()}">8</dd></div>
+                        <div><dt>Использовано</dt><dd th:text="${c.balance().used()}">0</dd></div>
+                        <div class="stats__main"><dt>Осталось</dt><dd th:text="${c.balance().remaining()}">8</dd></div>
+                    </dl>
+                    <p class="portal-note" th:text="|Каждое занятие — ${c.lessonMinutes()} минут, индивидуально и онлайн.|">Каждое занятие — 60 минут.</p>
+                </th:block>
+
+                <th:block th:if="${plan.current() == null}">
+                    <p><strong>Сейчас у&nbsp;вас нет активного абонемента.</strong></p>
+                    <p th:if="${plan.pending() != null}">
+                        Абонемент <strong th:text="${plan.pending().planName()}">Regular</strong> назначен и&nbsp;ожидает подтверждения оплаты преподавателем.
+                    </p>
+                    <p>Чтобы оформить или продлить абонемент, свяжитесь с&nbsp;преподавателем.</p>
+                </th:block>
+
+                <p class="portal-note">
+                    По вопросам об&nbsp;абонементе и&nbsp;расписании
+                    <a th:href="${telegramUrl}" target="_blank" rel="noopener noreferrer" data-cta="dashboard">пишите в&nbsp;Telegram</a>.
+                </p>
+            </section>
+
+            <section class="portal-card" aria-labelledby="account-title">
+                <h2 class="portal-card__title" id="account-title">Аккаунт</h2>
+                <ul class="portal-actions" role="list">
+                    <li><a class="text-link" th:href="@{/account/password}">Сменить пароль <span aria-hidden="true">→</span></a></li>
+                </ul>
+                <form th:action="@{/logout}" method="post">
+                    <button class="btn btn--outline" type="submit">Выйти из кабинета</button>
+                </form>
+            </section>
+        </div>
+    </div>
+</main>
+
+<footer th:replace="~{fragments/layout :: site-footer}"></footer>
+
+</body>
+</html>

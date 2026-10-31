@@ -1,0 +1,288 @@
+/* ==========================================================================
+   Revo English — pricing section (fragments/pricing.html)
+   Relies on the design tokens and components defined in site.css.
+
+   1. Facts row
+   2. Plan cards
+   3. Recommended plan
+   4. Terms
+   5. Chosen learning path
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   1. Facts row
+   -------------------------------------------------------------------------- */
+
+.pricing__facts {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+    margin-top: var(--space-5);
+}
+
+.pricing__facts li {
+    padding: .35rem .85rem;
+    border: 1px solid var(--color-line-strong);
+    border-radius: var(--radius-pill);
+    font-size: var(--text-sm);
+    color: var(--color-text-soft);
+}
+
+/* --------------------------------------------------------------------------
+   2. Plan cards
+   -------------------------------------------------------------------------- */
+
+.plans {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--space-5);
+    align-items: stretch;
+}
+
+@media (min-width: 640px) and (max-width: 939px) {
+    .plans {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    /* Recommended plan spans the full row on tablets so it stays prominent */
+    .plans__item:has(.plan--recommended) {
+        grid-column: 1 / -1;
+        order: -1;
+    }
+}
+
+@media (min-width: 940px) {
+    .plans {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        padding-top: var(--space-4);
+    }
+}
+
+.plans__item {
+    display: flex;
+}
+
+.plan {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    padding: clamp(var(--space-5), 3vw, var(--space-6));
+    background: var(--color-surface);
+    border: 1px solid var(--color-line);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-sm);
+}
+
+.plan__name {
+    font-family: var(--font-display);
+    font-size: 2rem;
+    font-weight: 600;
+    line-height: 1.1;
+}
+
+.plan__audience {
+    margin-top: var(--space-2);
+    font-size: var(--text-sm);
+    color: var(--color-text-soft);
+}
+
+.plan__price {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: var(--space-1) var(--space-2);
+    margin-top: var(--space-5);
+    padding-top: var(--space-5);
+    border-top: 1px solid var(--color-line);
+}
+
+.plan__amount {
+    font-family: var(--font-display);
+    font-size: clamp(2.5rem, 4vw, 3rem);
+    font-weight: 600;
+    line-height: 1;
+    font-variant-numeric: lining-nums;
+    white-space: nowrap;
+}
+
+.plan__period {
+    font-size: var(--text-sm);
+    color: var(--color-text-muted);
+}
+
+.plan__savings {
+    margin-top: var(--space-3);
+    font-size: var(--text-sm);
+    color: var(--color-text-soft);
+}
+
+.plan__savings strong {
+    padding: .05rem .45rem;
+    border-radius: var(--radius-pill);
+    background: var(--color-accent-soft);
+    color: var(--color-accent-deep);
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+.plan__compare {
+    display: block;
+    margin-top: var(--space-1);
+    color: var(--color-text-muted);
+}
+
+.plan__savings--base {
+    color: var(--color-text-muted);
+}
+
+.plan__details {
+    display: grid;
+    gap: var(--space-2);
+    margin: var(--space-5) 0 var(--space-6);
+}
+
+.plan__details div {
+    display: flex;
+    justify-content: space-between;
+    gap: var(--space-4);
+    padding-bottom: var(--space-2);
+    border-bottom: 1px dashed var(--color-line);
+    font-size: var(--text-sm);
+}
+
+.plan__details dt {
+    color: var(--color-text-muted);
+}
+
+.plan__details dd {
+    margin: 0;
+    font-weight: 700;
+    color: var(--color-text);
+    white-space: nowrap;
+}
+
+.plan__cta {
+    margin-top: auto;
+}
+
+/* --------------------------------------------------------------------------
+   3. Recommended plan
+   -------------------------------------------------------------------------- */
+
+.plan--recommended {
+    border: 2px solid var(--color-accent-strong);
+    box-shadow: var(--shadow-md);
+}
+
+@media (min-width: 940px) {
+    .plan--recommended {
+        margin-top: calc(-1 * var(--space-4));
+        padding-top: calc(clamp(var(--space-5), 3vw, var(--space-6)) + var(--space-4));
+    }
+}
+
+.plan__badge {
+    position: absolute;
+    top: 0;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    padding: .3rem .9rem;
+    border-radius: var(--radius-pill);
+    background: var(--color-accent-strong);
+    color: #fff;
+    font-size: var(--text-xs);
+    font-weight: 700;
+    letter-spacing: var(--tracking-caps);
+    text-transform: uppercase;
+    white-space: nowrap;
+}
+
+/* --------------------------------------------------------------------------
+   4. Terms
+   5. Chosen learning path
+   -------------------------------------------------------------------------- */
+
+.pricing-terms {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--space-5);
+    margin-top: clamp(var(--space-6), 5vw, var(--space-7));
+}
+
+@media (min-width: 900px) {
+    .pricing-terms {
+        grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr);
+    }
+}
+
+.pricing-terms__title {
+    font-size: var(--text-xs);
+    font-weight: 700;
+    letter-spacing: var(--tracking-caps);
+    text-transform: uppercase;
+    color: var(--color-text-muted);
+}
+
+.pricing-terms__list {
+    display: grid;
+    gap: var(--space-3);
+    margin-top: var(--space-4);
+    counter-reset: term;
+}
+
+.pricing-terms__list li {
+    display: grid;
+    grid-template-columns: 1.75rem minmax(0, 1fr);
+    gap: var(--space-3);
+    color: var(--color-text-soft);
+    counter-increment: term;
+}
+
+.pricing-terms__list li::before {
+    content: counter(term);
+    display: grid;
+    place-items: center;
+    width: 1.75rem;
+    height: 1.75rem;
+    border: 1px solid var(--color-line-strong);
+    border-radius: 50%;
+    font-size: var(--text-xs);
+    font-weight: 700;
+    color: var(--color-accent-strong);
+}
+
+.pricing-terms__agree {
+    padding: var(--space-5);
+    border-left: 3px solid var(--color-accent);
+    border-radius: 0 var(--radius-md) var(--radius-md) 0;
+    background: var(--color-surface);
+}
+
+.pricing-terms__agree p {
+    margin-top: var(--space-3);
+    color: var(--color-text-soft);
+}
+
+/* --------------------------------------------------------------------------
+   5. Chosen learning path (on /english and /it-english)
+   -------------------------------------------------------------------------- */
+
+.pricing__path {
+    display: inline-block;
+    margin-top: var(--space-5);
+    padding: var(--space-3) var(--space-4);
+    border-left: 3px solid var(--color-accent-strong);
+    border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+    background: var(--color-surface);
+    color: var(--color-text-soft);
+}
+
+.pricing__path strong {
+    color: var(--color-text);
+}
+
+.pricing__path-label {
+    font-weight: 600;
+    color: var(--color-accent-strong);
+}

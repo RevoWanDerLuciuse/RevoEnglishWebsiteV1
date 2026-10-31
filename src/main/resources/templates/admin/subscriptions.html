@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="ru" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <th:block th:replace="~{fragments/layout :: common-head}"/>
+    <th:block th:replace="~{fragments/layout :: seo('Абонементы ученика · Revo English', 'Абонементы и занятия ученика.', '/admin/students', false)}"/>
+    <link rel="stylesheet" th:href="@{/css/portal.css}">
+</head>
+<body>
+
+<th:block th:replace="~{fragments/layout :: portal-header('students')}"/>
+
+<main id="main" class="portal">
+    <div class="container">
+        <p th:if="${notice}" class="portal-alert portal-alert--success" role="status" th:text="${notice}">Готово.</p>
+        <p th:if="${error}" class="portal-alert portal-alert--error" role="alert" th:text="${error}">Ошибка.</p>
+
+        <header class="portal-head">
+            <p class="eyebrow"><a class="text-link" th:href="@{/admin/students}">← Ученики</a></p>
+            <h1 class="portal-title">Абонементы · <em th:text="${student.displayName}">Анна</em></h1>
+            <p class="student__login" th:text="${student.login}">anna</p>
+        </header>
+
+        <!-- Current balance -->
+        <section class="portal-card plan-now" aria-labelledby="now-title">
+            <h2 class="portal-card__title" id="now-title">Сейчас</h2>
+            <th:block th:if="${plan.current() != null}" th:with="c=${plan.current()}">
+                <p class="plan-now__name"><strong th:text="${c.planName()}">Regular</strong>
+                    <span class="badge badge--on" th:text="${c.statusLabel()}">Активен</span>
+                    <span th:text="|${#temporals.format(c.startsOn(), 'dd.MM.yyyy')} — ${#temporals.format(c.expiresOn(), 'dd.MM.yyyy')}|">даты</span></p>
+                <dl class="stats">
+                    <div><dt>По тарифу</dt><dd th:text="${c.balance().allocated()}">8</dd></div>
+                    <div><dt>Корректировки</dt><dd th:text="${c.balance().adjusted()}">0</dd></div>
+                    <div><dt>Использовано</dt><dd th:text="${c.balance().used()}">0</dd></div>
+                    <div class="stats__main"><dt>Осталось</dt><dd th:text="${c.balance().remaining()}">8</dd></div>
+                </dl>
+            </th:block>
+            <p th:if="${plan.current() == null}" class="portal-note">Нет действующего абонемента.</p>
+        </section>
+
+        <div class="admin-layout admin-layout--even">
+            <!-- Assign -->
+            <section class="portal-card" aria-labelledby="assign-title">
+                <h2 class="portal-card__title" id="assign-title">Назначить абонемент</h2>
+                <form class="portal-form" th:action="@{/admin/students/{id}/subscriptions(id=${student.id})}" method="post">
+                    <input type="hidden" name="formKey" th:value="${assignKey}">
+                    <fieldset class="field field--choice">
+                        <legend class="field__label">Тариф</legend>
+                        <label class="choice" th:each="p, it : ${plans}">
+                            <input type="radio" name="planCode" th:value="${p.id()}" th:checked="${p.recommended()}" required>
+                            <span><strong th:text="${p.name()}">Start</strong> —
+                                <span th:text="${p.lessonsText()}">4 занятия</span> по 60 минут,
+                                <span th:text="${p.monthlyPriceText()}">6 000 ₽</span></span>
+                        </label>
+                    </fieldset>
+                    <div class="field-row">
+                        <div class="field">
+                            <label class="field__label" for="startsOn">Начало</label>
+                            <input class="field__input" id="startsOn" name="startsOn" type="date" required th:value="${today}">
+                        </div>
+                        <div class="field">
+                            <label class="field__label" for="expiresOn">Окончание (включительно)</label>
+                            <input class="field__input" id="expiresOn" name="expiresOn" type="date" required th:value="${defaultExpiry}">
+                        </div>
+                    </div>
+                    <label class="choice">
+                        <input type="checkbox" name="complimentary" value="true">
+                        <span>Бесплатно (без оплаты) — активируется сразу</span>
+                    </label>
+                    <div class="field">
+                        <label class="field__label" for="complimentaryReason">Причина бесплатного абонемента <span class="field__optional">(обязательно, если бесплатно)</span></label>
+                        <input class="field__input" id="complimentaryReason" name="complimentaryReason" type="text" maxlength="500">
+                    </div>
+                    <p class="field__hint">Платный абонемент ждёт оплаты; когда получите её, нажмите «Оплата получена» — занятия начислятся.</p>
+                    <button class="btn btn--primary btn--block" type="submit">Назначить</button>
+                </form>
+            </section>
+
+            <!-- Consume manually -->
+            <section class="portal-card" aria-labelledby="consume-title">
+                <h2 class="portal-card__title" id="consume-title">Отметить проведённое занятие</h2>
+                <p class="portal-note">Пока нет календаря: списывает одно занятие с&nbsp;абонемента, действующего на дату занятия.</p>
+                <form class="portal-form" th:action="@{/admin/students/{id}/lessons/consume(id=${student.id})}" method="post">
+                    <input type="hidden" name="formKey" th:value="${consumeKey}">
+                    <div class="field">
+                        <label class="field__label" for="lessonDate">Дата занятия</label>
+                        <input class="field__input" id="lessonDate" name="lessonDate" type="date" required th:value="${today}" th:max="${today}">
+                    </div>
+                    <div class="field">
+                        <label class="field__label" for="consumeNote">Комментарий <span class="field__optional">(необязательно)</span></label>
+                        <input class="field__input" id="consumeNote" name="note" type="text" maxlength="500">
+                    </div>
+                    <button class="btn btn--outline btn--block" type="submit" th:disabled="${plan.current() == null}">Списать 1 занятие</button>
+                </form>
+            </section>
+        </div>
+
+        <!-- History -->
+        <section class="history" aria-labelledby="history-title">
+            <h2 class="portal-card__title" id="history-title">История абонементов</h2>
+            <p th:if="${#lists.isEmpty(history)}" class="portal-note">Абонементов пока не было.</p>
+
+            <article th:each="d : ${history}" class="portal-card sub" th:with="s=${d.subscription()}"
+                     th:attr="aria-labelledby=${'sub-' + s.id}">
+                <header class="sub__head">
+                    <h3 class="sub__title" th:id="${'sub-' + s.id}">
+                        <span th:text="${s.planName}">Regular</span>
+                        <span class="badge" th:classappend="${d.status().name() == 'ACTIVE'} ? 'badge--on' : (${d.status().name() == 'CANCELLED'} ? 'badge--off' : '')"
+                              th:text="${d.statusLabel()}">Активен</span>
+                        <span th:if="${s.complimentary}" class="badge">Бесплатный</span>
+                    </h3>
+                    <p class="sub__dates" th:text="|${#temporals.format(s.startsOn, 'dd.MM.yyyy')} — ${#temporals.format(s.expiresOn, 'dd.MM.yyyy')} · ${s.lessonsIncluded} занятий по ${s.lessonMinutes} мин|">даты</p>
+                </header>
+
+                <dl class="stats">
+                    <div><dt>По тарифу</dt><dd th:text="${d.balance().allocated()}">0</dd></div>
+                    <div><dt>Корректировки</dt><dd th:text="${d.balance().adjusted()}">0</dd></div>
+                    <div><dt>Использовано</dt><dd th:text="${d.balance().used()}">0</dd></div>
+                    <div class="stats__main"><dt>Осталось</dt><dd th:text="${d.balance().remaining()}">0</dd></div>
+                </dl>
+
+                <dl class="sub__facts">
+                    <div><dt>Цена</dt><dd th:text="|${d.price()} (${s.currency})|">11 200 ₽</dd></div>
+                    <div th:unless="${s.complimentary}"><dt>Оплата</dt>
+                        <dd th:text="${d.paymentConfirmed() != null} ? |получена: ${d.paymentConfirmed()}| : 'ожидается'">ожидается</dd></div>
+                    <div th:if="${s.complimentary}"><dt>Бесплатно</dt><dd th:text="${s.complimentaryReason}">причина</dd></div>
+                    <div><dt>Назначил</dt><dd th:text="|${d.createdBy()}, ${d.createdAt()}|">Эмир</dd></div>
+                    <div th:if="${d.closedAt() != null}"><dt th:text="${s.status.name() == 'CANCELLED'} ? 'Отменил' : 'Закрыт'">Закрыт</dt>
+                        <dd th:text="|${d.closedBy()}, ${d.closedAt()}${s.closeReason != null ? ' — ' + s.closeReason : ''}|">—</dd></div>
+                </dl>
+
+                <!-- Actions (information only: payments and refunds happen outside the site) -->
+                <div class="sub__actions">
+                    <form th:if="${d.canConfirmPayment()}" class="confirm-payment" th:action="@{/admin/students/{sid}/subscriptions/{id}/confirm-payment(sid=${student.id},id=${s.id})}" method="post">
+                        <button class="btn btn--primary" type="submit">Оплата получена</button>
+                        <span class="field__hint">Абонемент станет активным, ученику начислятся занятия.</span>
+                    </form>
+
+                    <form th:if="${d.canAdjust()}" class="inline-form" th:action="@{/admin/students/{sid}/subscriptions/{id}/adjustments(sid=${student.id},id=${s.id})}" method="post">
+                        <input type="hidden" name="formKey" th:value="${adjustKey}">
+                        <span class="inline-form__title">Корректировка занятий</span>
+                        <label class="visually-hidden" th:for="${'delta-' + s.id}">Количество (+/−)</label>
+                        <input class="field__input field__input--short" th:id="${'delta-' + s.id}" name="delta" type="number" min="-50" max="50" step="1" required placeholder="+1">
+                        <label class="visually-hidden" th:for="${'adjReason-' + s.id}">Причина</label>
+                        <input class="field__input" th:id="${'adjReason-' + s.id}" name="reason" type="text" minlength="3" maxlength="500" required placeholder="Причина (обязательно)">
+                        <button class="btn btn--outline btn--small" type="submit">Записать</button>
+                    </form>
+
+                    <form th:if="${d.canMarkExpired()}" th:action="@{/admin/students/{sid}/subscriptions/{id}/expire(sid=${student.id},id=${s.id})}" method="post">
+                        <button class="btn btn--ghost btn--small" type="submit">Отметить как истёкший</button>
+                    </form>
+
+                    <form th:if="${d.canCancel()}" class="inline-form" th:action="@{/admin/students/{sid}/subscriptions/{id}/cancel(sid=${student.id},id=${s.id})}" method="post">
+                        <span class="inline-form__title">Отметить как отменённый</span>
+                        <label class="visually-hidden" th:for="${'cancelReason-' + s.id}">Комментарий</label>
+                        <input class="field__input" th:id="${'cancelReason-' + s.id}" name="reason" type="text" maxlength="500" placeholder="Комментарий (необязательно)">
+                        <button class="btn btn--ghost btn--small" type="submit">Отменить абонемент</button>
+                    </form>
+                </div>
+
+                <details th:unless="${#lists.isEmpty(d.ledger())}" class="sub__log" open>
+                    <summary th:text="|Движение занятий (${#lists.size(d.ledger())})|">Движение занятий</summary>
+                    <div class="log-scroll">
+                    <table class="log-table">
+                        <thead><tr><th scope="col">Когда</th><th scope="col">Операция</th><th scope="col">Изм.</th><th scope="col">Занятие / причина</th><th scope="col">Кто</th><th scope="col"><span class="visually-hidden">Действие</span></th></tr></thead>
+                        <tbody>
+                        <tr th:each="e : ${d.ledger()}">
+                            <td th:text="${e.createdAt()}">01.01.2026</td>
+                            <td th:text="${e.typeLabel()}">Начисление</td>
+                            <td class="log-table__delta" th:text="${e.deltaText()}">+8</td>
+                            <td><span th:if="${e.lessonDate() != null}" th:text="|${#temporals.format(e.lessonDate(), 'dd.MM.yyyy')} |">дата</span><span th:text="${e.reason()} ?: ''"></span></td>
+                            <td th:text="${e.actor()}">Эмир</td>
+                            <td>
+                                <form th:if="${e.restorable()}" class="inline-form inline-form--compact" th:action="@{/admin/students/{sid}/credits/{id}/restore(sid=${student.id},id=${e.id()})}" method="post">
+                                    <label class="visually-hidden" th:for="${'restore-' + e.id()}">Комментарий к возврату</label>
+                                    <input class="field__input" th:id="${'restore-' + e.id()}" name="reason" type="text" maxlength="500" placeholder="Комментарий (необязательно)">
+                                    <button class="btn btn--ghost btn--small" type="submit">Вернуть</button>
+                                </form>
+                            </td>
+                        </tr>
+                        </tbody>
+                    </table>
+                    </div>
+                </details>
+            </article>
+        </section>
+    </div>
+</main>
+
+<footer th:replace="~{fragments/layout :: site-footer}"></footer>
+
+</body>
+</html>

@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="ru" xmlns:th="http://www.thymeleaf.org">
+<!--/*
+  Monthly lesson plans, shared by /, /english and /it-english.
+  Plan data and all prices come from PricingCatalog (${pricingOffers}); nothing is calculated here.
+  index – section number shown in the eyebrow ("05")
+  alt   – use the alternate background to keep sections visually separated
+*/-->
+<body>
+
+<section th:fragment="pricing(index, alt)"
+         th:class="${alt} ? 'section section--alt pricing' : 'section pricing'"
+         id="pricing" aria-labelledby="pricing-title">
+    <div class="container">
+        <header class="section-head">
+            <p class="section-index"><span th:text="${index}">05</span>Цены</p>
+            <h2 class="section-title" id="pricing-title">Абонемент на&nbsp;месяц&nbsp;— <em>индивидуальные занятия</em></h2>
+            <p class="section-lead">
+                Выберите, сколько занятий в&nbsp;месяц вам удобно,&nbsp;— расписание составим вместе.
+                Цены одинаковые для General English и&nbsp;IT&nbsp;English.
+            </p>
+            <p th:if="${pricingPath != null}" class="pricing__path">
+                <span class="pricing__path-label">Направление:</span> <strong th:text="${pricingPath}">IT English</strong>
+                — оно уже указано в&nbsp;сообщении. Осталось выбрать тариф.
+            </p>
+            <ul class="pricing__facts" role="list">
+                <li>Индивидуально, один на&nbsp;один</li>
+                <li>Онлайн в&nbsp;Discord</li>
+                <li>60&nbsp;минут каждое занятие</li>
+            </ul>
+        </header>
+
+        <ul class="plans" role="list">
+            <li th:each="offer : ${pricingOffers}" th:with="plan=${offer.plan()}" class="plans__item">
+                <article class="plan" th:classappend="${plan.recommended()} ? 'plan--recommended'"
+                         th:attr="aria-labelledby=${'plan-' + plan.id()}">
+                    <p th:if="${plan.recommended()}" class="plan__badge">Рекомендуем</p>
+                    <h3 class="plan__name" th:id="${'plan-' + plan.id()}" lang="en" th:text="${plan.name()}">Start</h3>
+                    <p class="plan__audience" th:text="${plan.audience()}">Раз в неделю.</p>
+
+                    <p class="plan__price">
+                        <span class="plan__amount" th:text="${plan.monthlyPriceText()}">6 000 ₽</span>
+                        <span class="plan__period">в&nbsp;месяц</span>
+                    </p>
+
+                    <p th:if="${plan.discounted()}" class="plan__savings">
+                        Экономия <strong th:text="${plan.monthlySavingsText()}">800 ₽</strong> в&nbsp;месяц
+                        <span class="plan__compare">
+                            вместо <span th:text="${plan.standardMonthlyPriceText()}">12 000 ₽</span>
+                            по&nbsp;разовой цене <span th:text="${plan.standardLessonPriceText()}">1 500 ₽</span>
+                        </span>
+                    </p>
+                    <p th:unless="${plan.discounted()}" class="plan__savings plan__savings--base">
+                        Базовая цена занятия, без скидки
+                    </p>
+
+                    <dl class="plan__details">
+                        <div>
+                            <dt>Занятий в&nbsp;месяц</dt>
+                            <dd th:text="${plan.lessonsPerMonth()}">4</dd>
+                        </div>
+                        <div>
+                            <dt>Длительность</dt>
+                            <dd th:text="${plan.lessonDurationText()}">60 минут</dd>
+                        </div>
+                        <div>
+                            <dt>Цена часа занятия</dt>
+                            <dd th:text="${plan.hourlyRateText()}">1 500 ₽</dd>
+                        </div>
+                    </dl>
+
+                    <a class="btn btn--block plan__cta"
+                       th:classappend="${plan.recommended()} ? 'btn--primary' : 'btn--outline'"
+                       th:href="${offer.telegramUrl()}" target="_blank" rel="noopener noreferrer"
+                       th:attr="data-cta=${'pricing-' + plan.id()},
+                                aria-label=${'Выбрать тариф ' + plan.name() + ' — написать в Telegram (откроется в новой вкладке)'}">
+                        <th:block th:replace="~{fragments/layout :: icon-telegram}"/>
+                        Выбрать тариф
+                    </a>
+                </article>
+            </li>
+        </ul>
+
+        <!--/*
+          DECISION NEEDED (owner): rules for unused lessons, cancellations, rescheduling and refunds
+          are not defined yet. The text below deliberately promises none of them.
+        */-->
+        <div class="pricing-terms">
+            <div class="pricing-terms__how">
+                <h3 class="pricing-terms__title">Как работает абонемент</h3>
+                <ol class="pricing-terms__list" role="list">
+                    <li>Абонемент&nbsp;— это фиксированное количество занятий в&nbsp;течение одного месяца.</li>
+                    <li>День и&nbsp;время каждого занятия согласуем индивидуально.</li>
+                    <li>Оплату и&nbsp;расписание обсуждаем напрямую в&nbsp;Telegram. На&nbsp;сайте ничего оплачивать не&nbsp;нужно.</li>
+                </ol>
+            </div>
+            <div class="pricing-terms__agree">
+                <h3 class="pricing-terms__title">Обсуждаем до&nbsp;оплаты</h3>
+                <p>
+                    Что происходит с&nbsp;неиспользованными занятиями, как отменить или перенести занятие и&nbsp;в&nbsp;каких случаях
+                    возможен возврат,&nbsp;— эти условия мы&nbsp;согласуем и&nbsp;зафиксируем до&nbsp;оплаты.
+                </p>
+            </div>
+        </div>
+    </div>
+</section>
+
+</body>
+</html>

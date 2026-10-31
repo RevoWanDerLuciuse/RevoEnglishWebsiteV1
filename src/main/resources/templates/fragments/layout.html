@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="ru" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<!--/* Shared layout pieces. Pages add their SEO block (fragment "seo") and page-specific assets. */-->
+<head>
+    <th:block th:fragment="common-head">
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#FAF7F1">
+        <meta name="revo-analytics-debug" th:content="${analyticsDebug} ? 'true' : 'false'">
+        <link rel="icon" type="image/svg+xml" th:href="@{/favicon.svg}">
+        <!--/* Self-hosted fonts: preload the two faces every page renders first (Cyrillic body + headings). */-->
+        <link rel="preload" th:href="@{/fonts/manrope-cyrillic.woff2}" as="font" type="font/woff2" crossorigin>
+        <link rel="preload" th:href="@{/fonts/cormorant-garamond-cyrillic.woff2}" as="font" type="font/woff2" crossorigin>
+        <link rel="stylesheet" th:href="@{/css/site.css}">
+        <script type="module" th:src="@{/js/analytics.js}"></script>
+    </th:block>
+
+    <!--/*
+      Title, description, robots, canonical, Open Graph and Twitter Card metadata.
+      path      – page path such as '/english', used for canonical and og:url
+      indexable – false for pages that must never be indexed (error pages)
+      Canonical/og:url/og:image need an absolute URL, so they are only rendered once site.base-url is configured.
+    */-->
+    <th:block th:fragment="seo(title, description, path, indexable)">
+        <title th:text="${title}">Revo English</title>
+        <meta name="description" th:content="${description}">
+        <meta name="robots" th:content="${indexable and siteIndexable} ? 'index, follow' : 'noindex, nofollow'">
+        <link th:if="${indexable and siteIndexable}" rel="canonical" th:href="${siteBaseUrl + path}">
+
+        <meta property="og:type" content="website">
+        <meta property="og:locale" content="ru_RU">
+        <meta property="og:site_name" content="Revo English">
+        <meta property="og:title" th:content="${title}">
+        <meta property="og:description" th:content="${description}">
+        <th:block th:if="${siteIndexable}">
+            <meta property="og:url" th:content="${siteBaseUrl + path}">
+            <meta property="og:image" th:content="${siteBaseUrl + '/images/emir.jpg'}">
+            <meta property="og:image:width" content="720">
+            <meta property="og:image:height" content="960">
+            <meta property="og:image:alt" content="Эмир, преподаватель английского">
+        </th:block>
+
+        <meta name="twitter:card" content="summary">
+        <meta name="twitter:title" th:content="${title}">
+        <meta name="twitter:description" th:content="${description}">
+        <meta th:if="${siteIndexable}" name="twitter:image" th:content="${siteBaseUrl + '/images/emir.jpg'}">
+    </th:block>
+</head>
+<body>
+
+<!--/* Navigation links shared by the desktop and mobile menus. active: 'home' | 'english' | 'it-english' | 'none' */-->
+<th:block th:fragment="nav-links(active)">
+    <a th:href="@{/english}" th:attr="aria-current=${active == 'english'} ? 'page' : null">General English</a>
+    <a th:href="@{/it-english}" th:attr="aria-current=${active == 'it-english'} ? 'page' : null">IT English</a>
+    <a th:href="@{/#approach}">Подход</a>
+    <a th:href="@{/#practice}">Упражнение</a>
+    <a th:href="@{/#about}">Обо мне</a>
+    <a th:href="${active == 'home' or active == 'english' or active == 'it-english'} ? '#pricing' : @{/#pricing}">Цены</a>
+</th:block>
+
+<th:block th:fragment="site-header(active)">
+    <a class="skip-link" href="#main">Перейти к содержанию</a>
+
+    <header class="site-header">
+        <div class="container site-header__inner">
+            <a class="wordmark" th:href="@{/}" aria-label="Revo English — на главную">Revo<span>English</span></a>
+
+            <nav class="site-nav" aria-label="Основная навигация">
+                <th:block th:replace="~{fragments/layout :: nav-links(${active})}"/>
+            </nav>
+
+            <a class="btn btn--outline btn--small" th:href="${telegramContactUrl ?: telegramUrl}" target="_blank" rel="noopener noreferrer"
+               data-cta="header" aria-label="Написать в Telegram (откроется в новой вкладке)">
+                <th:block th:replace="~{fragments/layout :: icon-telegram}"/>
+                Telegram
+            </a>
+        </div>
+    </header>
+
+    <!--/* Below 1120px the header menu is replaced by this scrollable row (not sticky, to save screen space). */-->
+    <nav class="mobile-nav" aria-label="Основная навигация">
+        <div class="container mobile-nav__inner">
+            <th:block th:replace="~{fragments/layout :: nav-links(${active})}"/>
+        </div>
+    </nav>
+</th:block>
+
+
+<!--/*
+  Header of the private portal (login, dashboard, admin). active: 'login' | 'dashboard' | 'students' | 'password'.
+  Links are shown per role for convenience only — access is enforced on the server (SecurityConfig).
+*/-->
+<th:block th:fragment="portal-header(active)">
+    <a class="skip-link" href="#main">Перейти к содержанию</a>
+
+    <header class="site-header portal-header">
+        <div class="container site-header__inner portal-header__inner">
+            <a class="wordmark" th:href="@{/}" aria-label="Revo English — на главную">Revo<span>English</span></a>
+
+            <nav class="portal-nav" aria-label="Личный кабинет" sec:authorize="isAuthenticated()">
+                <a sec:authorize="hasRole('STUDENT')" th:href="@{/dashboard}"
+                   th:attr="aria-current=${active == 'dashboard'} ? 'page' : null">Кабинет</a>
+                <a sec:authorize="hasRole('ADMIN')" th:href="@{/admin/students}"
+                   th:attr="aria-current=${active == 'students'} ? 'page' : null">Ученики</a>
+                <a th:href="@{/account/password}" th:attr="aria-current=${active == 'password'} ? 'page' : null">Пароль</a>
+                <a th:href="@{/}">На сайт</a>
+            </nav>
+
+            <form sec:authorize="isAuthenticated()" class="portal-logout" th:action="@{/logout}" method="post">
+                <button class="btn btn--outline btn--small" type="submit">Выйти</button>
+            </form>
+            <a sec:authorize="!isAuthenticated()" class="btn btn--outline btn--small" th:href="@{/}">На сайт</a>
+        </div>
+    </header>
+</th:block>
+<footer th:fragment="site-footer" class="site-footer">
+    <div class="container site-footer__inner">
+        <p>© <span th:text="${#dates.year(#dates.createNow())}">2026</span> Revo English · Практический английский для взрослых</p>
+        <nav class="site-footer__nav" aria-label="Ссылки в подвале">
+            <a th:href="@{/english}">General English</a>
+            <a th:href="@{/it-english}">IT English</a>
+            <a th:href="${telegramUrl}" target="_blank" rel="noopener noreferrer" data-cta="footer"
+               th:text="'Telegram ' + ${telegramHandle}">Telegram</a>
+            <a th:href="@{/login}">Вход для учеников</a>
+        </nav>
+    </div>
+</footer>
+
+<!--/* Breadcrumb back to the homepage for the learning-path pages */-->
+<nav th:fragment="breadcrumb(current)" class="breadcrumb" aria-label="Навигационная цепочка">
+    <ol role="list">
+        <li><a th:href="@{/}">Главная</a></li>
+        <li><a th:href="@{/#paths}">Направления</a></li>
+        <li aria-current="page" th:text="${current}">Раздел</li>
+    </ol>
+</nav>
+
+<!--/*
+  Closing contact section of a learning-path page. Its main button leads to the pricing section, whose plan
+  messages already name the path; ${telegramContactUrl} stays available as a plain "just ask" link.
+  Links across to the other path.
+*/-->
+<section th:fragment="path-contact(pathName, crossQuestion, crossHref, crossLabel)"
+         class="contact" id="contact" aria-labelledby="contact-title">
+    <div class="container contact__inner">
+        <div class="contact__intro">
+            <p class="section-index"><span>→</span>Следующий шаг</p>
+            <h2 class="contact__title" id="contact-title">Обсудим занятия по&nbsp;<em th:text="${pathName}">English</em></h2>
+            <p class="contact__lead">
+                Выберите тариф&nbsp;— и&nbsp;в&nbsp;Telegram откроется одно готовое сообщение с&nbsp;направлением и&nbsp;тарифом. Дальше обсудим ваши цели и&nbsp;с&nbsp;чего лучше начать.
+            </p>
+            <p class="contact__cross">
+                <span th:text="${crossQuestion}">Вопрос</span>
+                <a class="text-link" th:href="${crossHref}"><span th:text="${crossLabel}">Другое направление</span> <span aria-hidden="true">→</span></a>
+            </p>
+        </div>
+
+        <div class="contact__card">
+            <h3 class="contact__label">Как записаться</h3>
+            <ol class="contact__steps" role="list">
+                <li><span>Выберите тариф&nbsp;— направление <strong th:text="${pathName}">English</strong> уже указано.</span></li>
+                <li>Telegram откроет чат с&nbsp;готовым сообщением: направление и&nbsp;тариф. Текст можно изменить.</li>
+                <li>Отправьте его сами&nbsp;— обсудим цели, расписание и&nbsp;оплату.</li>
+            </ol>
+            <a class="btn btn--primary btn--large btn--block" href="#pricing">
+                Выбрать тариф
+                <svg class="icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M12 19V5"/><path d="m5 12 7-7 7 7"/></svg>
+            </a>
+            <p class="contact__alt">
+                Хотите сначала задать вопрос?
+                <a th:href="${telegramContactUrl}" target="_blank" rel="noopener noreferrer" data-cta="path-contact"
+                   aria-label="Написать в Telegram без выбора тарифа (откроется в новой вкладке)">Написать без выбора тарифа</a>
+            </p>
+            <p class="contact__handle">Telegram: <span th:text="${telegramHandle}">@username</span></p>
+        </div>
+    </div>
+</section>
+
+<!--/* Icons */-->
+<svg th:fragment="icon-telegram" class="icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M22 2 11 13"/><path d="M22 2 15 22l-4-9-9-4 20-7z"/></svg>
+<svg th:fragment="icon-arrow-right" class="icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+<svg th:fragment="icon-arrow-down" class="icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M12 5v14"/><path d="m19 12-7 7-7-7"/></svg>
+<svg th:fragment="icon-restart" class="icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 4v5h5"/></svg>
+
+</body>
+</html>

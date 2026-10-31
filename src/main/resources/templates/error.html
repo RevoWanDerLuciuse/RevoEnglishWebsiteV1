@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="ru" xmlns:th="http://www.thymeleaf.org">
+<!--/* Generic error page for every status without a dedicated template. Shows no technical details. */-->
+<head>
+    <th:block th:replace="~{fragments/layout :: common-head}"/>
+    <th:block th:replace="~{fragments/layout :: seo('Что-то пошло не так · Revo English', 'Ошибка на сайте Revo English.', '/error', false)}"/>
+</head>
+<body>
+
+<th:block th:replace="~{fragments/layout :: site-header('none')}"/>
+
+<main id="main" class="error-page">
+    <div class="container error-page__inner">
+        <p class="error-page__code" aria-hidden="true" th:text="${status != null and status >= 400 and status < 600} ? ${status} : 'Ошибка'">Ошибка</p>
+        <h1 class="error-page__title">Что-то пошло <em>не&nbsp;так</em></h1>
+        <p class="error-page__lead">
+            Страницу не&nbsp;удалось открыть. Попробуйте обновить её чуть позже или вернитесь на&nbsp;главную.
+        </p>
+        <div class="error-page__actions">
+            <a class="btn btn--primary" th:href="@{/}">На главную</a>
+        </div>
+    </div>
+</main>
+
+<footer th:replace="~{fragments/layout :: site-footer}"></footer>
+
+</body>
+</html>

@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="ru" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <th:block th:replace="~{fragments/layout :: common-head}"/>
+    <th:block th:replace="~{fragments/layout :: seo('Вход для учеников · Revo English', 'Вход в личный кабинет ученика Revo English.', '/login', false)}"/>
+    <link rel="stylesheet" th:href="@{/css/portal.css}">
+</head>
+<body>
+
+<th:block th:replace="~{fragments/layout :: portal-header('login')}"/>
+
+<main id="main" class="portal portal--centered">
+    <div class="container">
+        <section class="portal-card portal-card--narrow" aria-labelledby="login-title">
+            <p class="eyebrow">Личный кабинет</p>
+            <h1 class="portal-title" id="login-title">Вход для <em>учеников</em></h1>
+
+            <!--/* One generic message for every failure: unknown login, wrong password or disabled account */-->
+            <p th:if="${param.error}" class="portal-alert portal-alert--error" role="alert">
+                Неверный логин или пароль. Если не получается войти, напишите преподавателю.
+            </p>
+            <p th:if="${param.logout}" class="portal-alert" role="status">Вы вышли из кабинета.</p>
+            <p th:if="${param.ended}" class="portal-alert" role="status">Сеанс завершён. Войдите снова.</p>
+
+            <form class="portal-form" th:action="@{/login}" method="post">
+                <div class="field">
+                    <label class="field__label" for="login">Логин</label>
+                    <input class="field__input" id="login" name="login" type="text" required maxlength="254"
+                           autocomplete="username" autocapitalize="none" spellcheck="false" autofocus>
+                </div>
+                <div class="field">
+                    <label class="field__label" for="password">Пароль</label>
+                    <input class="field__input" id="password" name="password" type="password" required
+                           autocomplete="current-password">
+                </div>
+                <button class="btn btn--primary btn--block" type="submit">Войти</button>
+            </form>
+
+            <p class="portal-note">
+                Аккаунты создаёт преподаватель&nbsp;— самостоятельной регистрации нет.
+                Чтобы получить доступ, <a th:href="${telegramUrl}" target="_blank" rel="noopener noreferrer" data-cta="login">напишите в&nbsp;Telegram</a>.
+            </p>
+        </section>
+    </div>
+</main>
+
+<footer th:replace="~{fragments/layout :: site-footer}"></footer>
+
+</body>
+</html>

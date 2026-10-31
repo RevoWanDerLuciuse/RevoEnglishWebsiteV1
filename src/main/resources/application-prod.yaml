@@ -1,0 +1,24 @@
+# Production profile: activate with SPRING_PROFILES_ACTIVE=prod.
+# Assumes the app runs behind a reverse proxy or platform load balancer that terminates HTTPS.
+
+server:
+  # Trust X-Forwarded-* headers only from internal/private proxy addresses (Tomcat RemoteIpValve defaults),
+  # so redirects, HSTS and request URLs use the public https:// scheme.
+  forward-headers-strategy: native
+  # Finish in-flight requests before stopping during a redeploy.
+  shutdown: graceful
+  servlet:
+    session:
+      cookie:
+        # Session cookie only over HTTPS
+        secure: true
+
+spring:
+  lifecycle:
+    timeout-per-shutdown-phase: 20s
+  thymeleaf:
+    cache: true
+
+logging:
+  level:
+    root: INFO

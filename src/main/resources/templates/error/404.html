@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="ru" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <th:block th:replace="~{fragments/layout :: common-head}"/>
+    <th:block th:replace="~{fragments/layout :: seo('Страница не найдена · Revo English', 'Такой страницы на сайте Revo English нет.', '/404', false)}"/>
+</head>
+<body>
+
+<th:block th:replace="~{fragments/layout :: site-header('none')}"/>
+
+<main id="main" class="error-page">
+    <div class="container error-page__inner">
+        <p class="error-page__code" aria-hidden="true">404</p>
+        <h1 class="error-page__title">Такой страницы <em>нет</em></h1>
+        <p class="error-page__lead">
+            Возможно, ссылка устарела или в&nbsp;адресе опечатка. Вот куда можно перейти:
+        </p>
+        <div class="error-page__actions">
+            <a class="btn btn--primary" th:href="@{/}">На главную</a>
+            <a class="btn btn--ghost" th:href="@{/english}">General English</a>
+            <a class="btn btn--ghost" th:href="@{/it-english}">IT English</a>
+        </div>
+    </div>
+</main>
+
+<footer th:replace="~{fragments/layout :: site-footer}"></footer>
+
+</body>
+</html>

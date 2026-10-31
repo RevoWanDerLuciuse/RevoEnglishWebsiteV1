@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="ru" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <th:block th:replace="~{fragments/layout :: common-head}"/>
+    <th:block th:replace="~{fragments/layout :: seo('Ученики · Revo English', 'Управление аккаунтами учеников.', '/admin/students', false)}"/>
+    <link rel="stylesheet" th:href="@{/css/portal.css}">
+</head>
+<body>
+
+<th:block th:replace="~{fragments/layout :: portal-header('students')}"/>
+
+<main id="main" class="portal">
+    <div class="container">
+        <p th:if="${notice}" class="portal-alert portal-alert--success" role="status" th:text="${notice}">Готово.</p>
+
+        <header class="portal-head">
+            <p class="eyebrow">Администрирование</p>
+            <h1 class="portal-title">Аккаунты <em>учеников</em></h1>
+        </header>
+
+        <div class="admin-layout">
+            <!-- New student -->
+            <section class="portal-card" aria-labelledby="new-title">
+                <h2 class="portal-card__title" id="new-title">Новый ученик</h2>
+
+                <form class="portal-form" th:action="@{/admin/students}" th:object="${form}" method="post" novalidate>
+                    <div class="field" th:classappend="${#fields.hasErrors('displayName')} ? 'field--error'">
+                        <label class="field__label" for="displayName">Имя</label>
+                        <input class="field__input" th:field="*{displayName}" type="text" required maxlength="100" autocomplete="off"
+                               th:attr="aria-invalid=${#fields.hasErrors('displayName')} ? 'true' : null,
+                                        aria-describedby=${#fields.hasErrors('displayName')} ? 'displayName-error' : 'displayName-hint'">
+                        <p class="field__hint" id="displayName-hint">Как обращаться к&nbsp;ученику в&nbsp;кабинете, например «Анна».</p>
+                        <p th:if="${#fields.hasErrors('displayName')}" class="field__error" id="displayName-error" th:errors="*{displayName}"></p>
+                    </div>
+
+                    <div class="field" th:classappend="${#fields.hasErrors('login')} ? 'field--error'">
+                        <label class="field__label" for="login">Логин</label>
+                        <input class="field__input" th:field="*{login}" type="text" required maxlength="254"
+                               autocomplete="off" autocapitalize="none" spellcheck="false"
+                               th:attr="aria-invalid=${#fields.hasErrors('login')} ? 'true' : null,
+                                        aria-describedby=${#fields.hasErrors('login')} ? 'login-error login-hint' : 'login-hint'">
+                        <p class="field__hint" id="login-hint">Имя пользователя или e-mail: латинские буквы, цифры, <code>. _ - + @</code>.</p>
+                        <p th:if="${#fields.hasErrors('login')}" class="field__error" id="login-error" th:errors="*{login}"></p>
+                    </div>
+
+                    <fieldset class="field field--choice">
+                        <legend class="field__label">Начальный пароль</legend>
+                        <label class="choice">
+                            <input type="radio" th:field="*{passwordMode}" value="generate">
+                            <span>Сгенерировать временный пароль <span class="choice__hint">(рекомендуется)</span></span>
+                        </label>
+                        <label class="choice">
+                            <input type="radio" th:field="*{passwordMode}" value="manual">
+                            <span>Задать пароль самостоятельно</span>
+                        </label>
+                    </fieldset>
+
+                    <div class="field" th:classappend="${#fields.hasErrors('initialPassword')} ? 'field--error'">
+                        <label class="field__label" for="initialPassword">Пароль <span class="field__optional">(только если «Задать самостоятельно»)</span></label>
+                        <!--/* No th:field/value: a typed password is never rendered back into the page */-->
+                        <input class="field__input" id="initialPassword" name="initialPassword" type="password" autocomplete="new-password"
+                               th:attr="aria-invalid=${#fields.hasErrors('initialPassword')} ? 'true' : null,
+                                        aria-describedby=${#fields.hasErrors('initialPassword')} ? 'initialPassword-error initialPassword-hint' : 'initialPassword-hint'">
+                        <p class="field__hint" id="initialPassword-hint">Не меньше 10 символов. В&nbsp;любом случае ученик сменит пароль при первом входе.</p>
+                        <p th:if="${#fields.hasErrors('initialPassword')}" class="field__error" id="initialPassword-error" th:errors="*{initialPassword}"></p>
+                    </div>
+
+                    <button class="btn btn--primary btn--block" type="submit">Создать аккаунт</button>
+                </form>
+            </section>
+
+            <!-- Students -->
+            <section class="portal-card" aria-labelledby="list-title">
+                <h2 class="portal-card__title" id="list-title">
+                    Ученики <span class="count" th:text="${#lists.size(students)}">0</span>
+                </h2>
+
+                <p th:if="${#lists.isEmpty(students)}" class="portal-note">Пока нет ни одного ученика.</p>
+
+                <ul th:unless="${#lists.isEmpty(students)}" class="student-list" role="list">
+                    <li th:each="s : ${students}" class="student" th:classappend="${!s.active()} ? 'student--inactive'">
+                        <div class="student__info">
+                            <p class="student__name" th:text="${s.displayName()}">Анна</p>
+                            <p class="student__login" th:text="${s.login()}">anna</p>
+                            <p class="student__meta">
+                                <span class="badge" th:classappend="${s.active()} ? 'badge--on' : 'badge--off'"
+                                      th:text="${s.active()} ? 'Активен' : 'Отключён'">Активен</span>
+                                <span th:if="${s.passwordChangeRequired()}" class="badge">Временный пароль</span>
+                                <span>создан <span th:text="${s.created()}">01.01.2026</span></span>
+                            </p>
+                            <p class="student__plan" th:if="${s.plan() != null}">
+                                <span th:text="${s.plan().planName()}">Regular</span> ·
+                                <span th:text="${s.plan().statusLabel()}">Активен</span>
+                                <span th:if="${s.plan().status().name() == 'ACTIVE'}" th:text="|· осталось ${s.plan().balance().remaining()} из ${s.plan().balance().totalIncluded()}|">· осталось 8</span>
+                            </p>
+                            <p class="student__plan student__plan--none" th:if="${s.plan() == null}">Нет абонемента</p>
+                        </div>
+                        <div class="student__actions">
+                            <a class="btn btn--outline btn--small" th:href="@{/admin/students/{id}/subscriptions(id=${s.id()})}"
+                               th:attr="aria-label=${'Абонементы: ' + s.displayName()}">Абонементы</a>
+                            <form th:action="@{/admin/students/{id}/status(id=${s.id()})}" method="post">
+                                <input type="hidden" name="active" th:value="${!s.active()}">
+                                <button class="btn btn--small" th:classappend="${s.active()} ? 'btn--ghost' : 'btn--outline'" type="submit"
+                                        th:text="${s.active()} ? 'Отключить' : 'Включить'"
+                                        th:attr="aria-label=${(s.active() ? 'Отключить доступ: ' : 'Включить доступ: ') + s.displayName()}">Отключить</button>
+                            </form>
+                            <form th:action="@{/admin/students/{id}/password-reset(id=${s.id()})}" method="post">
+                                <button class="btn btn--ghost btn--small" type="submit"
+                                        th:attr="aria-label=${'Новый временный пароль: ' + s.displayName()}">Новый пароль</button>
+                            </form>
+                        </div>
+                    </li>
+                </ul>
+            </section>
+        </div>
+    </div>
+</main>
+
+<footer th:replace="~{fragments/layout :: site-footer}"></footer>
+
+</body>
+</html>

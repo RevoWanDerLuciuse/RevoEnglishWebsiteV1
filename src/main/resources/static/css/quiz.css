@@ -1,0 +1,680 @@
+/* ==========================================================================
+   Revo English — practice section & quiz
+   Relies on the design tokens defined in site.css.
+
+   1. Quiz tokens
+   2. Practice section layout
+   3. Quiz card & progress
+   4. Answer options
+   5. Feedback
+   6. Results
+   6b. Scenario variant
+   7. Motion
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   1. Quiz tokens — answer states (AA contrast on the light surfaces)
+   -------------------------------------------------------------------------- */
+
+.quiz {
+    --quiz-correct: #2E6B4E;
+    --quiz-correct-soft: #E5F0E9;
+    --quiz-incorrect: var(--color-accent-strong);
+    --quiz-incorrect-soft: var(--color-accent-soft);
+}
+
+/* --------------------------------------------------------------------------
+   2. Practice section layout
+   -------------------------------------------------------------------------- */
+
+.practice__grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--space-7);
+    align-items: start;
+}
+
+@media (min-width: 1000px) {
+    .practice__grid {
+        grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+        gap: clamp(var(--space-7), 5vw, 5rem);
+    }
+
+    .practice__intro {
+        position: sticky;
+        top: calc(var(--header-height) + var(--space-6));
+    }
+}
+
+.practice__meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+    margin-top: var(--space-6);
+}
+
+.practice__meta li {
+    padding: .35rem .85rem;
+    border: 1px solid var(--color-line-strong);
+    border-radius: var(--radius-pill);
+    font-size: var(--text-sm);
+    color: var(--color-text-soft);
+}
+
+.practice__note {
+    margin-top: var(--space-5);
+    max-width: 30em;
+    font-size: var(--text-sm);
+    color: var(--color-text-muted);
+}
+
+/* --------------------------------------------------------------------------
+   3. Quiz card & progress
+   -------------------------------------------------------------------------- */
+
+.quiz {
+    padding: clamp(var(--space-5), 4vw, var(--space-7));
+    background: var(--color-surface);
+    border: 1px solid var(--color-line);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-md);
+}
+
+.quiz__noscript {
+    color: var(--color-text-soft);
+}
+
+.quiz__top {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-3) var(--space-5);
+    padding-bottom: var(--space-5);
+    margin-bottom: var(--space-5);
+    border-bottom: 1px solid var(--color-line);
+}
+
+.quiz__counter {
+    font-size: var(--text-sm);
+    font-weight: 600;
+    color: var(--color-text-soft);
+    font-variant-numeric: tabular-nums;
+}
+
+.quiz__progress {
+    display: flex;
+    gap: 6px;
+    width: min(220px, 100%);
+}
+
+.quiz__step {
+    flex: 1;
+    height: 6px;
+    border-radius: var(--radius-pill);
+    background: var(--color-line);
+    transition: background-color var(--duration) var(--ease), transform var(--duration) var(--ease);
+}
+
+.quiz__step.is-current {
+    background: var(--color-text);
+}
+
+.quiz__step.is-correct {
+    background: var(--quiz-correct);
+}
+
+.quiz__step.is-incorrect {
+    background: var(--quiz-incorrect);
+}
+
+.quiz__label {
+    font-size: var(--text-xs);
+    font-weight: 700;
+    letter-spacing: var(--tracking-caps);
+    text-transform: uppercase;
+    color: var(--color-accent-strong);
+}
+
+.quiz__context {
+    margin-top: var(--space-2);
+    font-family: var(--font-display);
+    font-size: clamp(1.6rem, 3vw, 2.1rem);
+    font-weight: 500;
+    line-height: 1.2;
+    text-wrap: balance;
+}
+
+.quiz__prompt {
+    margin-top: var(--space-3);
+    font-size: var(--text-sm);
+    color: var(--color-text-muted);
+}
+
+/* Focus is moved to these non-interactive targets (tabindex="-1") so screen readers
+   announce them; they are not in the tab order, so no focus ring is drawn. */
+.quiz__context:focus,
+.quiz__feedback:focus,
+.quiz__score:focus {
+    outline: none;
+}
+
+/* --------------------------------------------------------------------------
+   4. Answer options
+   -------------------------------------------------------------------------- */
+
+.quiz__options {
+    display: grid;
+    gap: var(--space-3);
+    margin-top: var(--space-5);
+}
+
+.quiz-option {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    align-items: center;
+    gap: var(--space-2) var(--space-4);
+    width: 100%;
+    min-height: 64px;
+    padding: var(--space-4) var(--space-5);
+    background: var(--color-bg);
+    border: 1.5px solid var(--color-line-strong);
+    border-radius: var(--radius-md);
+    color: var(--color-text);
+    font: inherit;
+    text-align: left;
+    cursor: pointer;
+    transition:
+        border-color var(--duration) var(--ease),
+        background-color var(--duration) var(--ease),
+        box-shadow var(--duration) var(--ease),
+        transform var(--duration) var(--ease),
+        color var(--duration) var(--ease);
+}
+
+.quiz-option:not([aria-disabled="true"]):hover {
+    border-color: var(--color-text);
+    background: var(--color-surface);
+    box-shadow: var(--shadow-sm);
+    transform: translateY(-1px);
+}
+
+.quiz-option:not([aria-disabled="true"]):active {
+    transform: translateY(0);
+}
+
+.quiz-option[aria-disabled="true"] {
+    cursor: default;
+}
+
+.quiz-option__letter {
+    display: grid;
+    place-items: center;
+    width: 2.1rem;
+    height: 2.1rem;
+    border: 1.5px solid var(--color-line-strong);
+    border-radius: 50%;
+    font-size: var(--text-sm);
+    font-weight: 700;
+    color: var(--color-text-soft);
+    transition: inherit;
+}
+
+.quiz-option__text {
+    font-family: var(--font-display);
+    font-size: 1.35rem;
+    font-weight: 600;
+    line-height: 1.3;
+}
+
+.quiz-option__status {
+    grid-column: 2;
+    font-size: var(--text-xs);
+    font-weight: 700;
+    letter-spacing: .04em;
+}
+
+.quiz-option__status:empty {
+    display: none;
+}
+
+/* Correct option (chosen or revealed) */
+.quiz-option.is-correct {
+    border-color: var(--quiz-correct);
+    background: var(--quiz-correct-soft);
+}
+
+.quiz-option.is-correct .quiz-option__letter {
+    border-color: var(--quiz-correct);
+    background: var(--quiz-correct);
+    color: #fff;
+    font-size: 0;
+}
+
+.quiz-option.is-correct .quiz-option__letter::before {
+    content: "✓";
+    font-size: 1rem;
+}
+
+.quiz-option.is-correct .quiz-option__status {
+    color: var(--quiz-correct);
+}
+
+/* Chosen but not natural */
+.quiz-option.is-incorrect {
+    border-color: var(--quiz-incorrect);
+    background: var(--quiz-incorrect-soft);
+}
+
+.quiz-option.is-incorrect .quiz-option__letter {
+    border-color: var(--quiz-incorrect);
+    background: var(--quiz-incorrect);
+    color: #fff;
+    font-size: 0;
+}
+
+.quiz-option.is-incorrect .quiz-option__letter::before {
+    content: "✕";
+    font-size: .95rem;
+}
+
+.quiz-option.is-incorrect .quiz-option__text {
+    text-decoration: line-through;
+    text-decoration-thickness: 1.5px;
+    text-decoration-color: rgba(194, 69, 45, .6);
+}
+
+.quiz-option.is-incorrect .quiz-option__status {
+    color: var(--quiz-incorrect);
+}
+
+/* Remaining option after answering */
+.quiz-option.is-muted {
+    border-color: var(--color-line);
+    background: transparent;
+    color: var(--color-text-muted);
+}
+
+.quiz-option.is-muted .quiz-option__letter {
+    border-color: var(--color-line);
+    color: var(--color-text-muted);
+}
+
+/* --------------------------------------------------------------------------
+   5. Feedback
+   -------------------------------------------------------------------------- */
+
+.quiz__feedback {
+    margin-top: var(--space-5);
+    padding: var(--space-5);
+    border-left: 3px solid var(--color-line-strong);
+    border-radius: var(--radius-sm) var(--radius-md) var(--radius-md) var(--radius-sm);
+    background: var(--color-bg-alt);
+}
+
+.quiz__feedback.is-correct {
+    border-left-color: var(--quiz-correct);
+}
+
+.quiz__feedback.is-incorrect {
+    border-left-color: var(--quiz-incorrect);
+}
+
+.quiz__verdict {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    font-family: var(--font-display);
+    font-size: 1.6rem;
+    font-weight: 600;
+    line-height: 1.2;
+}
+
+.quiz__verdict::before {
+    display: grid;
+    place-items: center;
+    width: 1.6rem;
+    height: 1.6rem;
+    border-radius: 50%;
+    font-family: var(--font-sans);
+    font-size: .85rem;
+    font-weight: 700;
+    color: #fff;
+}
+
+.quiz__verdict.is-correct {
+    color: var(--quiz-correct);
+}
+
+.quiz__verdict.is-correct::before {
+    content: "✓";
+    background: var(--quiz-correct);
+}
+
+.quiz__verdict.is-incorrect {
+    color: var(--quiz-incorrect);
+}
+
+.quiz__verdict.is-incorrect::before {
+    content: "!";
+    background: var(--quiz-incorrect);
+}
+
+.quiz__answer {
+    margin-top: var(--space-3);
+    font-size: var(--text-sm);
+    color: var(--color-text-soft);
+}
+
+.quiz__answer span {
+    font-family: var(--font-display);
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: var(--color-text);
+}
+
+.quiz__explanation {
+    margin-top: var(--space-3);
+    color: var(--color-text-soft);
+}
+
+/* English fragments inside explanations */
+.quiz-en {
+    font-weight: 600;
+    color: var(--color-text);
+}
+
+.quiz__feedback-actions {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: var(--space-5);
+}
+
+@media (max-width: 560px) {
+    .quiz-option {
+        padding: var(--space-3) var(--space-4);
+        gap: var(--space-1) var(--space-3);
+    }
+
+    .quiz-option__text {
+        font-size: 1.2rem;
+    }
+
+    .quiz__feedback {
+        padding: var(--space-4);
+    }
+
+    .quiz__feedback-actions .btn {
+        width: 100%;
+    }
+}
+
+/* --------------------------------------------------------------------------
+   6. Results
+   -------------------------------------------------------------------------- */
+
+.quiz__score {
+    margin-top: var(--space-2);
+    font-family: var(--font-display);
+    font-size: clamp(3.25rem, 7vw, 4.5rem);
+    font-weight: 500;
+    line-height: 1;
+    font-variant-numeric: lining-nums;
+}
+
+.quiz__score-total {
+    font-size: .5em;
+    color: var(--color-text-muted);
+}
+
+.quiz__summary {
+    margin-top: var(--space-4);
+    max-width: 36em;
+    font-size: var(--text-lg);
+    color: var(--color-text-soft);
+}
+
+.quiz__summary strong {
+    color: var(--color-text);
+    font-weight: 700;
+}
+
+.quiz__review-title {
+    margin-top: var(--space-6);
+    padding-top: var(--space-5);
+    border-top: 1px solid var(--color-line);
+    font-size: var(--text-xs);
+    font-weight: 700;
+    letter-spacing: var(--tracking-caps);
+    text-transform: uppercase;
+    color: var(--color-text-muted);
+}
+
+.quiz__review {
+    display: grid;
+    gap: var(--space-3);
+    margin-top: var(--space-4);
+}
+
+.quiz-review {
+    display: grid;
+    grid-template-columns: 1.75rem minmax(0, 1fr);
+    align-items: start;
+    gap: var(--space-3);
+}
+
+.quiz-review__mark {
+    display: grid;
+    place-items: center;
+    width: 1.75rem;
+    height: 1.75rem;
+    border-radius: 50%;
+    font-size: .8rem;
+    font-weight: 700;
+    color: #fff;
+}
+
+.quiz-review.is-correct .quiz-review__mark {
+    background: var(--quiz-correct);
+}
+
+.quiz-review.is-incorrect .quiz-review__mark {
+    background: var(--quiz-incorrect);
+}
+
+.quiz-review__body {
+    display: grid;
+    gap: 2px;
+}
+
+.quiz-review__phrase {
+    font-family: var(--font-display);
+    font-size: 1.25rem;
+    font-weight: 600;
+    line-height: 1.3;
+}
+
+.quiz-review__yours {
+    font-size: var(--text-sm);
+    color: var(--color-text-muted);
+}
+
+.quiz-review__yours span {
+    text-decoration: line-through;
+    text-decoration-color: rgba(194, 69, 45, .6);
+}
+
+.quiz__disclaimer {
+    margin-top: var(--space-6);
+    padding: var(--space-4) var(--space-5);
+    border-radius: var(--radius-md);
+    background: var(--color-bg-alt);
+    font-size: var(--text-sm);
+    color: var(--color-text-soft);
+}
+
+.quiz__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-3);
+    margin-top: var(--space-6);
+}
+
+.quiz__continue {
+    margin-top: var(--space-5);
+    color: var(--color-text-soft);
+}
+
+@media (max-width: 560px) {
+    .quiz__actions .btn {
+        width: 100%;
+    }
+}
+
+/* --------------------------------------------------------------------------
+   Scenario variant — long chat messages, per-option notes, useful patterns
+   -------------------------------------------------------------------------- */
+
+.quiz--scenario .quiz-option {
+    align-items: start;
+}
+
+.quiz--scenario .quiz-option__text {
+    font-family: var(--font-sans);
+    font-size: var(--text-base);
+    font-weight: 500;
+    line-height: 1.55;
+}
+
+.quiz__subhead {
+    margin-top: var(--space-6);
+    padding-top: var(--space-5);
+    border-top: 1px solid var(--color-line-strong);
+    font-size: var(--text-xs);
+    font-weight: 700;
+    letter-spacing: var(--tracking-caps);
+    text-transform: uppercase;
+    color: var(--color-text-muted);
+}
+
+.quiz-notes {
+    display: grid;
+    gap: var(--space-4);
+    margin-top: var(--space-4);
+}
+
+.quiz-note {
+    padding: var(--space-4);
+    background: var(--color-surface);
+    border: 1px solid var(--color-line);
+    border-radius: var(--radius-md);
+}
+
+.quiz-note.is-best {
+    border-color: var(--quiz-correct);
+    box-shadow: inset 3px 0 0 var(--quiz-correct);
+}
+
+.quiz-note__head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-2);
+}
+
+.quiz-note__letter {
+    display: grid;
+    place-items: center;
+    width: 1.75rem;
+    height: 1.75rem;
+    border: 1.5px solid var(--color-line-strong);
+    border-radius: 50%;
+    font-size: .8rem;
+    font-weight: 700;
+    color: var(--color-text-soft);
+}
+
+.quiz-note.is-best .quiz-note__letter {
+    border-color: var(--quiz-correct);
+    background: var(--quiz-correct);
+    color: #fff;
+}
+
+.quiz-note__tag {
+    padding: .1rem .55rem;
+    border-radius: var(--radius-pill);
+    background: var(--quiz-correct-soft);
+    font-size: var(--text-xs);
+    font-weight: 700;
+    color: var(--quiz-correct);
+}
+
+.quiz-note__tag--yours {
+    background: var(--color-bg-alt);
+    color: var(--color-text-soft);
+}
+
+.quiz-note__phrase {
+    margin-top: var(--space-3);
+    font-family: var(--font-display);
+    font-size: 1.2rem;
+    font-weight: 600;
+    line-height: 1.35;
+}
+
+.quiz-note__text {
+    margin-top: var(--space-2);
+    font-size: var(--text-sm);
+    color: var(--color-text-soft);
+}
+
+.quiz-patterns {
+    display: grid;
+    gap: var(--space-3);
+    margin-top: var(--space-4);
+}
+
+.quiz-pattern {
+    display: grid;
+    gap: 2px;
+    padding-left: var(--space-4);
+    border-left: 2px solid var(--color-accent);
+}
+
+.quiz-pattern__phrase {
+    font-family: var(--font-mono);
+    font-size: .9rem;
+    font-weight: 600;
+    color: var(--color-text);
+}
+
+.quiz-pattern__meaning {
+    font-size: var(--text-sm);
+    color: var(--color-text-soft);
+}
+
+.quiz--scenario .quiz__actions {
+    margin-top: var(--space-6);
+}
+
+/* --------------------------------------------------------------------------
+   7. Motion — a short fade when a question, feedback or result appears
+   -------------------------------------------------------------------------- */
+
+@media (prefers-reduced-motion: no-preference) {
+    @keyframes quiz-enter {
+        from {
+            opacity: 0;
+            transform: translateY(6px);
+        }
+        to {
+            opacity: 1;
+            transform: none;
+        }
+    }
+
+    .quiz__view.is-entering,
+    .quiz__feedback:not([hidden]) {
+        animation: quiz-enter .28s var(--ease) both;
+    }
+}

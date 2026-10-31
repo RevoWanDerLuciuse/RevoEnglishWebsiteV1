@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="ru" xmlns:th="http://www.thymeleaf.org">
+<!--/*
+  Quiz markup shared by all exercises. The content (questions, explanations, summaries)
+  lives in /static/js/exercises/<exercise>.js and is rendered by /static/js/quiz.js.
+*/-->
+<body>
+
+<!--/*
+  Multi-question quiz with progress and a result screen.
+  id            – unique element id (also used for anchor links)
+  exercise      – data-quiz key, matches the exercise script
+  contactHref   – main action after the exercise: a Telegram link, or "#pricing" on learning-path pages
+  continueHref  – where "continue" leads after the result
+  continueLabel – text of that link
+*/-->
+<div th:fragment="quiz(id, exercise, contactHref, continueHref, continueLabel)"
+     class="quiz" th:id="${id}" th:attr="data-quiz=${exercise}">
+    <noscript>
+        <p class="quiz__noscript">Чтобы пройти упражнение, включите JavaScript в&nbsp;браузере.</p>
+    </noscript>
+
+    <div class="quiz__view" data-quiz-view="question" hidden>
+        <div class="quiz__top">
+            <p class="quiz__counter" data-quiz-counter></p>
+            <ol class="quiz__progress" data-quiz-progress aria-hidden="true"></ol>
+        </div>
+
+        <p class="quiz__label">Ситуация</p>
+        <h3 class="quiz__context" data-quiz-context tabindex="-1"></h3>
+        <p class="quiz__prompt" th:id="${id} + '-prompt'">Какой вариант звучит естественно?</p>
+        <ul class="quiz__options" data-quiz-options role="list" th:attr="aria-labelledby=${id} + '-prompt'"></ul>
+
+        <div class="quiz__feedback" data-quiz-feedback tabindex="-1" hidden>
+            <p class="quiz__verdict" data-quiz-verdict></p>
+            <p class="quiz__answer">Естественный вариант: <span lang="en" data-quiz-answer></span></p>
+            <p class="quiz__explanation" data-quiz-explanation></p>
+            <div class="quiz__feedback-actions">
+                <button class="btn btn--primary" type="button" data-quiz-next>
+                    <span data-quiz-next-label>Следующий вопрос</span>
+                    <th:block th:replace="~{fragments/layout :: icon-arrow-right}"/>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div class="quiz__view" data-quiz-view="result" hidden>
+        <p class="quiz__label">Результат</p>
+        <h3 class="quiz__score" data-quiz-result-title tabindex="-1">
+            <span data-quiz-score>0</span> <span class="quiz__score-total">из <span data-quiz-total></span></span>
+        </h3>
+        <p class="quiz__summary" data-quiz-summary></p>
+
+        <h4 class="quiz__review-title">Разбор ответов</h4>
+        <ol class="quiz__review" data-quiz-review role="list"></ol>
+
+        <p class="quiz__disclaimer">
+            Несколько вопросов не&nbsp;определяют уровень английского. Если хотите понять, с&nbsp;чего начать именно вам,&nbsp;— напишите, обсудим.
+        </p>
+
+        <div class="quiz__actions">
+            <th:block th:replace="~{fragments/quiz :: contact-cta(${contactHref}, 'exercise-result')}"/>
+            <button class="btn btn--ghost" type="button" data-quiz-restart>
+                <th:block th:replace="~{fragments/layout :: icon-restart}"/>
+                Пройти ещё раз
+            </button>
+        </div>
+        <a class="text-link quiz__continue" th:href="${continueHref}">
+            <span th:text="${continueLabel}">Продолжить</span> <span aria-hidden="true">↓</span>
+        </a>
+    </div>
+</div>
+
+<!--/*
+  Single-question scenario: no progress or result screen. After answering, the feedback
+  shows a review of every option, useful patterns and the next actions.
+*/-->
+<div th:fragment="scenario(id, exercise, contactHref, continueHref, continueLabel)"
+     class="quiz quiz--scenario" th:id="${id}" th:attr="data-quiz=${exercise}">
+    <noscript>
+        <p class="quiz__noscript">Чтобы пройти сценарий, включите JavaScript в&nbsp;браузере.</p>
+    </noscript>
+
+    <div class="quiz__view" data-quiz-view="question" hidden>
+        <p class="quiz__label">Ситуация</p>
+        <h3 class="quiz__context" data-quiz-context tabindex="-1"></h3>
+        <p class="quiz__prompt" th:id="${id} + '-prompt'">Какое сообщение коллеге сработает лучше всего?</p>
+        <ul class="quiz__options" data-quiz-options role="list" th:attr="aria-labelledby=${id} + '-prompt'"></ul>
+
+        <div class="quiz__feedback" data-quiz-feedback tabindex="-1" hidden>
+            <p class="quiz__verdict" data-quiz-verdict></p>
+            <p class="quiz__explanation" data-quiz-explanation></p>
+
+            <h4 class="quiz__subhead">Разбор вариантов</h4>
+            <ol class="quiz-notes" data-quiz-notes role="list"></ol>
+
+            <h4 class="quiz__subhead">Полезные конструкции</h4>
+            <ul class="quiz-patterns" data-quiz-patterns role="list"></ul>
+
+            <div class="quiz__actions">
+                <th:block th:replace="~{fragments/quiz :: contact-cta(${contactHref}, 'exercise-feedback')}"/>
+                <button class="btn btn--ghost" type="button" data-quiz-restart>
+                    <th:block th:replace="~{fragments/layout :: icon-restart}"/>
+                    Попробовать ещё раз
+                </button>
+            </div>
+            <a class="text-link quiz__continue" th:href="${continueHref}">
+                <span th:text="${continueLabel}">Продолжить</span> <span aria-hidden="true">↓</span>
+            </a>
+        </div>
+    </div>
+</div>
+
+
+<!--/*
+  Main action after an exercise. On learning-path pages href is "#pricing": the visitor picks a plan there and
+  Telegram opens with one message naming both the path and the plan. Otherwise href is a Telegram link.
+*/-->
+<th:block th:fragment="contact-cta(href, cta)">
+    <a th:if="${#strings.startsWith(href, '#')}" class="btn btn--primary" th:href="${href}">
+        Выбрать тариф
+        <th:block th:replace="~{fragments/layout :: icon-arrow-down}"/>
+    </a>
+    <a th:unless="${#strings.startsWith(href, '#')}" class="btn btn--primary" th:href="${href}" target="_blank" rel="noopener noreferrer"
+       th:attr="data-cta=${cta}" aria-label="Обсудить занятия в Telegram (откроется в новой вкладке)">
+        <th:block th:replace="~{fragments/layout :: icon-telegram}"/>
+        Обсудить занятия
+    </a>
+</th:block>
+</body>
+</html>

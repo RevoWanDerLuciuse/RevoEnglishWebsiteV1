@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="ru" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <th:block th:replace="~{fragments/layout :: common-head}"/>
+    <th:block th:replace="~{fragments/layout :: seo('IT English — английский для работы в IT · Revo English', 'IT English для разработчиков и IT-специалистов: объяснить баг, описать медленный запрос, участвовать в код-ревью и обосновать техническое решение.', '/it-english', true)}"/>
+    <link rel="stylesheet" th:href="@{/css/quiz.css}">
+    <link rel="stylesheet" th:href="@{/css/pricing.css}">
+    <link rel="stylesheet" th:href="@{/css/paths.css}">
+    <script type="module" th:src="@{/js/exercises/it-english.js}"></script>
+</head>
+<body data-analytics-page="it-english">
+
+<th:block th:replace="~{fragments/layout :: site-header('it-english')}"/>
+
+<main id="main">
+
+    <!-- 1. Hero -->
+    <section class="page-hero" aria-labelledby="page-title">
+        <div class="container">
+            <nav th:replace="~{fragments/layout :: breadcrumb('IT English')}"></nav>
+
+            <div class="page-hero__grid">
+                <div>
+                    <p class="eyebrow">IT English · английский для работы</p>
+                    <h1 class="page-hero__title" id="page-title">Говорите о&nbsp;коде так&nbsp;же <em>ясно</em>, как&nbsp;пишете&nbsp;его</h1>
+                    <p class="page-hero__lead">
+                        Для разработчиков, QA, аналитиков и&nbsp;всех, кто работает с&nbsp;международными командами.
+                        Тренируем то, что нужно каждый день: объяснить проблему, обсудить решение, оставить понятный комментарий в&nbsp;ревью.
+                    </p>
+                    <div class="page-hero__actions">
+                        <a class="btn btn--primary" href="#pricing">
+                            Выбрать тариф
+                            <th:block th:replace="~{fragments/layout :: icon-arrow-down}"/>
+                        </a>
+                        <a class="btn btn--ghost" href="#scenario">
+                            Попробовать сценарий
+                            <th:block th:replace="~{fragments/layout :: icon-arrow-down}"/>
+                        </a>
+                    </div>
+                </div>
+
+                <aside class="page-hero__aside page-hero__aside--dark" aria-labelledby="fit-title">
+                    <p class="page-hero__aside-tag"><span aria-hidden="true">// </span>IT изнутри</p>
+                    <p class="page-hero__aside-text">
+                        У&nbsp;меня есть опыт разработки на&nbsp;Java, поэтому мы&nbsp;говорим о&nbsp;реальных рабочих ситуациях, а&nbsp;не&nbsp;о&nbsp;текстах из&nbsp;учебника.
+                    </p>
+                    <h2 class="page-hero__aside-title" id="fit-title">Подойдёт, если вы</h2>
+                    <ul class="check-list" role="list">
+                        <li>свободно читаете документацию, но&nbsp;теряетесь на&nbsp;созвонах;</li>
+                        <li>готовитесь к&nbsp;собеседованию на&nbsp;английском;</li>
+                        <li>хотите писать в&nbsp;рабочих чатах коротко и&nbsp;по&nbsp;делу.</li>
+                    </ul>
+                </aside>
+            </div>
+        </div>
+    </section>
+
+    <!-- 2. Scenarios -->
+    <section class="section" id="scenarios" aria-labelledby="scenarios-title">
+        <div class="container">
+            <header class="section-head">
+                <p class="section-index"><span>01</span>Рабочие сценарии</p>
+                <h2 class="section-title" id="scenarios-title">Четыре ситуации, <em>знакомые каждому</em></h2>
+                <p class="section-lead">
+                    Цель&nbsp;— не&nbsp;выучить термины, а&nbsp;объяснять понятно: коротко, конкретно и&nbsp;вежливо. Вот с&nbsp;чего обычно начинаем.
+                </p>
+            </header>
+
+            <ol class="scenario-grid" role="list">
+                <li class="scenario">
+                    <span class="scenario__num" aria-hidden="true">01</span>
+                    <h3 class="scenario__title">Объяснить баг коллеге</h3>
+                    <p class="scenario__text">Коротко описать, что сломалось, как воспроизвести и&nbsp;что ожидалось.</p>
+                    <ul class="scenario__phrases" role="list" lang="en">
+                        <li>Steps to reproduce: …</li>
+                        <li>I expected X, but got Y instead.</li>
+                        <li>It only happens when …</li>
+                    </ul>
+                </li>
+                <li class="scenario">
+                    <span class="scenario__num" aria-hidden="true">02</span>
+                    <h3 class="scenario__title">Описать медленный запрос к&nbsp;базе</h3>
+                    <p class="scenario__text">Объяснить, где узкое место, чем это подтверждается и&nbsp;что вы предлагаете.</p>
+                    <ul class="scenario__phrases" role="list" lang="en">
+                        <li>This query takes about three seconds in production.</li>
+                        <li>It does a full table scan on the orders table.</li>
+                        <li>An index on user_id should help.</li>
+                    </ul>
+                </li>
+                <li class="scenario">
+                    <span class="scenario__num" aria-hidden="true">03</span>
+                    <h3 class="scenario__title">Участвовать в&nbsp;код-ревью</h3>
+                    <p class="scenario__text">Оставить комментарий, который звучит конструктивно, и&nbsp;спокойно ответить на&nbsp;чужой.</p>
+                    <ul class="scenario__phrases" role="list" lang="en">
+                        <li>Could we extract this into a separate method?</li>
+                        <li>Nit: maybe rename this to …</li>
+                        <li>Good point — I’ll fix it.</li>
+                    </ul>
+                </li>
+                <li class="scenario">
+                    <span class="scenario__num" aria-hidden="true">04</span>
+                    <h3 class="scenario__title">Объяснить техническое решение</h3>
+                    <p class="scenario__text">Обосновать выбор и&nbsp;честно назвать компромиссы.</p>
+                    <ul class="scenario__phrases" role="list" lang="en">
+                        <li>We went with X over Y because …</li>
+                        <li>The main trade-off is …</li>
+                        <li>It’s simpler to maintain, but slower to start.</li>
+                    </ul>
+                </li>
+            </ol>
+        </div>
+    </section>
+
+    <!-- 3. Interactive scenario -->
+    <section class="section section--alt" id="scenario" aria-labelledby="scenario-title">
+        <div class="container practice__grid">
+            <header class="practice__intro">
+                <p class="section-index"><span>02</span>Попробуйте</p>
+                <h2 class="section-title" id="scenario-title">Сценарий: <em>эндпоинт стал медленнее</em></h2>
+                <p class="section-lead">
+                    Вы заметили, что после недавнего деплоя API-эндпоинт стал отвечать медленнее. Какое сообщение коллеге сработает лучше?
+                </p>
+                <ul class="practice__meta" role="list">
+                    <li>1 ситуация</li>
+                    <li>Разбор каждого варианта</li>
+                    <li>Полезные конструкции</li>
+                </ul>
+                <p class="practice__note">Здесь проверяется не&nbsp;знание технологий, а&nbsp;то, насколько понятно и&nbsp;естественно звучит сообщение.</p>
+            </header>
+
+            <div th:replace="~{fragments/quiz :: scenario('it-scenario', 'it-english', '#pricing', '#lessons', 'Дальше: как проходят занятия')}"></div>
+        </div>
+    </section>
+
+    <!-- 4. Lessons -->
+    <section class="section" id="lessons" aria-labelledby="lessons-title">
+        <div class="container">
+            <header class="section-head">
+                <p class="section-index"><span>03</span>Занятия</p>
+                <h2 class="section-title" id="lessons-title">Как могут проходить <em>индивидуальные занятия</em></h2>
+            </header>
+
+            <ol class="steps" role="list">
+                <li class="step">
+                    <h3 class="step__title">Ваши рабочие задачи</h3>
+                    <p>Начинаем с&nbsp;того, что происходит у&nbsp;вас на&nbsp;работе: созвоны, ревью, переписка, предстоящее собеседование.</p>
+                </li>
+                <li class="step">
+                    <h3 class="step__title">Ролевые сценарии</h3>
+                    <p>Проигрываем стендап, демо, обсуждение бага или техническое интервью&nbsp;— и&nbsp;разбираем формулировки.</p>
+                </li>
+                <li class="step">
+                    <h3 class="step__title">Ваши тексты</h3>
+                    <p>Сообщения в&nbsp;Slack, комментарии к&nbsp;пул-реквестам, описания задач&nbsp;— делаем их короче и&nbsp;понятнее.</p>
+                </li>
+                <li class="step">
+                    <h3 class="step__title">Онлайн в&nbsp;Discord</h3>
+                    <p>С&nbsp;интерактивными досками&nbsp;— удобно разбирать схемы, тексты и&nbsp;фрагменты кода.</p>
+                </li>
+            </ol>
+
+            <p class="honest-note">
+                Скорость прогресса зависит от&nbsp;стартового уровня и&nbsp;регулярности практики, поэтому сроков «под ключ» я&nbsp;не&nbsp;обещаю.
+                Зато всё, что мы&nbsp;разбираем, можно использовать на&nbsp;ближайшем созвоне.
+            </p>
+        </div>
+    </section>
+
+    <!-- 5. Pricing -->
+    <section th:replace="~{fragments/pricing :: pricing('04', true)}"></section>
+
+    <!-- 6. Contact -->
+    <section th:replace="~{fragments/layout :: path-contact('IT English', 'Нужен английский и вне работы?', @{/english}, 'Посмотрите General English')}"></section>
+
+</main>
+
+<footer th:replace="~{fragments/layout :: site-footer}"></footer>
+
+</body>
+</html>
