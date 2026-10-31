@@ -1,5 +1,5 @@
-# Optional container image (verified: builds, starts against PostgreSQL 17 and runs as a non-root user).
-# The app itself needs only a Java 25 runtime; see README.md → Deployment.
+# Container image of the site, used by compose.prod.yaml (README.md → Deployment with Docker Compose).
+# Runs as a non-root user; the app itself needs only a Java 25 runtime.
 
 FROM eclipse-temurin:25-jdk AS build
 WORKDIR /app
@@ -7,7 +7,8 @@ COPY gradlew settings.gradle build.gradle ./
 COPY gradle gradle
 RUN chmod +x gradlew && ./gradlew --no-daemon dependencies > /dev/null
 COPY src src
-RUN ./gradlew --no-daemon bootJar
+# The full build, tests included: a failing test stops the image build, so a broken version is never deployed.
+RUN ./gradlew --no-daemon build
 
 FROM eclipse-temurin:25-jre
 RUN useradd --system --uid 10001 --no-create-home app

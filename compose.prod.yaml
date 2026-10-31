@@ -1,0 +1,47 @@
+# Production: the site and its PostgreSQL database (README → Deployment with Docker Compose).
+#   cp .env.example .env    # fill in once
+#   docker compose -f compose.prod.yaml up -d --build
+# HTTPS is handled by the Caddy already running on the server, which proxies to 127.0.0.1:18081.
+name: revo-english
+
+services:
+  app:
+    build: .
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/revoenglish
+      SPRING_DATASOURCE_USERNAME: revoenglish
+      SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD:?Set DB_PASSWORD in .env}
+      SITE_BASE_URL: ${SITE_BASE_URL:-}
+      SITE_TELEGRAM_USERNAME: ${SITE_TELEGRAM_USERNAME:-RevoWanDerLuciuse}
+      PORTAL_TIME_ZONE: ${PORTAL_TIME_ZONE:-Asia/Ho_Chi_Minh}
+      ADMIN_BOOTSTRAP_LOGIN: ${ADMIN_BOOTSTRAP_LOGIN:-}
+      ADMIN_BOOTSTRAP_PASSWORD: ${ADMIN_BOOTSTRAP_PASSWORD:-}
+      ADMIN_BOOTSTRAP_NAME: ${ADMIN_BOOTSTRAP_NAME:-}
+    ports:
+      # Bound to the server itself only: Docker would otherwise publish the port past the firewall.
+      # Caddy forwards here and adds X-Forwarded-For/-Proto, which the app trusts from this private address.
+      - "127.0.0.1:${APP_PORT:-18081}:8080"
+
+  db:
+    # Debian variant, the same as compose.yaml for local development
+    image: postgres:17-bookworm
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: revoenglish
+      POSTGRES_USER: revoenglish
+      POSTGRES_PASSWORD: ${DB_PASSWORD:?Set DB_PASSWORD in .env}
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U revoenglish -d revoenglish"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+
+volumes:
+  # Accounts and subscriptions live here; back it up (README → Backups). `docker compose down -v` would delete it.
+  db-data:
