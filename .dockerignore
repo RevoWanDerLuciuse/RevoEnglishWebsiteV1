@@ -4,3 +4,5 @@ build
 out
 *.iml
 HELP.md
+.git
+.env

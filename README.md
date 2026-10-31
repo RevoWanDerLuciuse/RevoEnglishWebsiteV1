@@ -83,56 +83,102 @@ Always run production behind a reverse proxy or platform load balancer that **te
 
 ## Deployment
 
-The project builds into one self-contained executable jar. Any host that can run Java 25 works.
+### With Docker Compose (the production server)
 
-1. **Build** (locally or in CI):
+`compose.prod.yaml` runs the site and its PostgreSQL database. The Caddy already installed on the server handles
+HTTPS and proxies to `127.0.0.1:18081`. The server needs only git and Docker with the compose plugin — no Java.
+Settings live in `.env` next to the compose file; `compose.prod.yaml` passes them to the app as the variables listed
+under *Configuration* (`DB_PASSWORD` becomes `SPRING_DATASOURCE_PASSWORD`; the image already sets the `prod` profile).
+
+**First start**
+
+1. Get the code and create the settings file:
+   ```bash
+   git clone https://github.com/RevoWanDerLuciuse/RevoEnglishWebsiteV1.git revo-english
+   cd revo-english
+   cp .env.example .env
+   ```
+   In `.env`, fill in `DB_PASSWORD` (e.g. from `openssl rand -base64 24`), `SITE_BASE_URL` (the real domain) and
+   `ADMIN_BOOTSTRAP_LOGIN` / `ADMIN_BOOTSTRAP_PASSWORD` (the teacher's first sign-in). `.env` is git-ignored, so
+   `git pull` never touches it.
+2. Build and start. The first build downloads the dependencies and runs all tests, which takes a few minutes:
+   ```bash
+   docker compose -f compose.prod.yaml up -d --build
+   ```
+3. When the log shows *"Administrator account created"*, clear `ADMIN_BOOTSTRAP_PASSWORD` in `.env` and apply it:
+   ```bash
+   docker compose -f compose.prod.yaml logs app | grep "Administrator account"
+   docker compose -f compose.prod.yaml up -d
+   ```
+4. Caddy: the site block of the domain only needs to proxy to the app. Caddy adds `X-Forwarded-For` and
+   `X-Forwarded-Proto` by itself; the app relies on them to know the request came over HTTPS and to count failed
+   sign-ins per visitor.
+   ```
+   your-domain.example {
+       reverse_proxy 127.0.0.1:18081
+   }
+   ```
+
+**Updating**
+
+```bash
+git pull && docker compose -f compose.prod.yaml up -d --build
+```
+
+The image is rebuilt with all tests. If the build or a test fails, nothing is replaced and the running version keeps
+serving. Otherwise the app container is replaced (a few seconds of downtime) and Flyway applies new database
+migrations on start; the database container and its data stay as they are.
+
+**Everyday commands**
+
+| What | Command |
+|------|---------|
+| Logs | `docker compose -f compose.prod.yaml logs -f app` |
+| State | `docker compose -f compose.prod.yaml ps` |
+| Health | `curl -s 127.0.0.1:18081/actuator/health` → `{"status":"UP",…}` |
+| Stop | `docker compose -f compose.prod.yaml down` — keeps the data. **Never add `-v`**: it deletes the database. |
+
+**Backups**
+
+The database volume holds all accounts and subscriptions. Make a dump regularly (e.g. a daily cron job) and keep
+copies off the server:
+
+```bash
+docker compose -f compose.prod.yaml exec -T db pg_dump -U revoenglish revoenglish | gzip > revo-$(date +%F).sql.gz
+```
+
+To restore on a fresh server, start only the database, load the dump, then start everything:
+
+```bash
+docker compose -f compose.prod.yaml up -d --wait db
+gunzip -c revo-2026-11-01.sql.gz | docker compose -f compose.prod.yaml exec -T db psql -q -v ON_ERROR_STOP=1 -U revoenglish revoenglish
+docker compose -f compose.prod.yaml up -d --build
+```
+
+### Without Docker
+
+The project also builds into one self-contained executable jar for any host with Java 25:
+
+1. **Build** (needs JDK 25; runs all tests):
    ```bash
    ./gradlew clean build
    ```
-   Output: `build/libs/RevoEnglishWebsite-0.0.1-SNAPSHOT.jar`. GitHub Actions (`.github/workflows/build.yml`) runs
-   the same build with all tests on every push to `master` and on every pull request — deploy only a green build.
-2. **Copy** the jar to the server and **run** it with Java 25:
+   Output: `build/libs/RevoEnglishWebsite-0.0.1-SNAPSHOT.jar`.
+2. **Run** it on the server with the environment variables from *Configuration*:
    ```bash
    export SPRING_PROFILES_ACTIVE=prod
    export SITE_BASE_URL=https://your-domain.example      # <-- PLACEHOLDER: your real domain
-   export SITE_TELEGRAM_USERNAME=RevoWanDerLuciuse
    export SPRING_DATASOURCE_URL=jdbc:postgresql://<db-host>:5432/<db-name>   # <-- PLACEHOLDERS
    export SPRING_DATASOURCE_USERNAME=<db-user>
    export SPRING_DATASOURCE_PASSWORD=<db-password>
    java -XX:MaxRAMPercentage=75 -jar RevoEnglishWebsite-0.0.1-SNAPSHOT.jar
    ```
-   Keep it running with your platform's process manager (systemd service, container platform, PaaS, …).
-   On start, Flyway creates/updates the tables automatically. Back up the database regularly — it holds the accounts.
-3. **Put HTTPS in front**: point your domain at a reverse proxy / load balancer that terminates TLS and forwards
-   to the app's port, passing `X-Forwarded-For` and `X-Forwarded-Proto`. The login limit counts failed attempts per
-   visitor address taken from `X-Forwarded-For`; without it every visitor would share the proxy's address.
-   Example for nginx (adapt to your setup):
-   ```nginx
-   location / {
-       proxy_pass         http://127.0.0.1:8080;
-       proxy_set_header   Host              $host;
-       proxy_set_header   X-Forwarded-For   $proxy_add_x_forwarded_for;
-       proxy_set_header   X-Forwarded-Proto $scheme;
-   }
-   ```
-4. **Health checks**: configure the platform to probe
-   - `GET /actuator/health/liveness` → restart the app if it fails,
-   - `GET /actuator/health/readiness` → send traffic only when it returns 200.
-
-   Responses contain only `{"status":"UP"}`-style data. No other actuator endpoints are exposed over HTTP.
-5. **Verify after deploy** (see checklist below).
-
-### Container image (optional)
-
-A `Dockerfile` is included for hosts that deploy containers (verified: the image builds, starts against PostgreSQL 17,
-reports healthy and runs as a non-root user). It sets `SPRING_PROFILES_ACTIVE=prod`; pass the same environment
-variables as above, at least the database ones:
-```bash
-docker build -t revo-english .
-docker run -p 8080:8080 -e SPRING_DATASOURCE_URL=... -e SPRING_DATASOURCE_USERNAME=... \
-  -e SPRING_DATASOURCE_PASSWORD=... -e SITE_BASE_URL=... revo-english
-```
-Note that the image build skips the tests (`bootJar`); rely on the CI build for those.
+   Keep it running with a process manager (e.g. a systemd service). On start, Flyway creates/updates the tables.
+3. **Put HTTPS in front**: a reverse proxy that terminates TLS and forwards to the app's port, passing
+   `X-Forwarded-For` and `X-Forwarded-Proto` (Caddy does this by default; nginx needs `proxy_set_header` lines).
+4. **Health checks** for a platform: `GET /actuator/health/liveness` (restart when failing) and
+   `GET /actuator/health/readiness` (send traffic only on 200). Responses contain only `{"status":"UP"}`-style data;
+   no other actuator endpoints are exposed over HTTP.
 
 ---
 
@@ -140,10 +186,10 @@ Note that the image build skips the tests (`bootJar`); rely on the CI build for 
 
 - [ ] Decide the production domain and set `SITE_BASE_URL` to it (e.g. `https://your-domain.example`).
 - [ ] Confirm `SITE_TELEGRAM_USERNAME` (default `RevoWanDerLuciuse`) opens the right chat: click a Telegram button.
-- [ ] Set `SPRING_PROFILES_ACTIVE=prod` and serve the site only over HTTPS (the session cookie is HTTPS-only in `prod`).
-- [ ] Create a PostgreSQL database and set `SPRING_DATASOURCE_URL`, `_USERNAME`, `_PASSWORD`; set up backups.
+- [ ] Fill in `.env` on the server (see *Deployment*) and point the domain's Caddy site block at `127.0.0.1:18081`.
+      Serve the site only over HTTPS (the session cookie is HTTPS-only in `prod`).
 - [ ] Create the first administrator with `ADMIN_BOOTSTRAP_*`, sign in once, then remove `ADMIN_BOOTSTRAP_PASSWORD`.
-- [ ] Configure the health probes listed above.
+- [ ] Schedule the daily database dump (*Backups*), keep copies off the server and try a restore once.
 - [ ] After deploy, open `https://<domain>/robots.txt` (must list the sitemap) and `https://<domain>/sitemap.xml`.
 - [ ] View page source on `/`, `/english`, `/it-english`: `<link rel="canonical">` must use the real domain.
 - [ ] Check a link preview (e.g. paste a URL into Telegram) — it shows the title, description and photo.
@@ -159,7 +205,8 @@ Private area for students. **There is no self-registration**: only an administra
 
 ### First administrator (one time)
 
-1. Start the app once with these environment variables (choose a strong password, ≥ 10 characters):
+1. Start the app once with these environment variables (choose a strong password, ≥ 10 characters). With Docker
+   Compose they go into `.env` instead (see *Deployment*):
    ```bash
    export ADMIN_BOOTSTRAP_LOGIN=<your-login>          # e.g. emir or an e-mail address
    export ADMIN_BOOTSTRAP_PASSWORD=<strong-password>
