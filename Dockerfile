@@ -1,4 +1,4 @@
-# Optional container image. NOTE: not yet built or tested — verify with `docker build` before relying on it.
+# Optional container image (verified: builds, starts against PostgreSQL 17 and runs as a non-root user).
 # The app itself needs only a Java 25 runtime; see README.md → Deployment.
 
 FROM eclipse-temurin:25-jdk AS build

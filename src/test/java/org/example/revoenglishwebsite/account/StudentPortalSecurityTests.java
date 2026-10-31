@@ -11,6 +11,7 @@ import org.springframework.mock.web.MockHttpSession;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
+import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 
 import java.util.UUID;
 
@@ -138,6 +139,25 @@ class StudentPortalSecurityTests {
                 .andExpect(redirectedUrl("/login?error")).andExpect(unauthenticated());
         mvc.perform(formLogin("/login").user("login", "nobody-" + login).password(PASSWORD))
                 .andExpect(redirectedUrl("/login?error")).andExpect(unauthenticated());
+    }
+
+    @Test
+    void tooManyFailuresFromOneAddressRefuseEvenTheCorrectPassword() throws Exception {
+        String login = unique("guessed");
+        accounts.createStudent("Подбор", login, PASSWORD);
+        String attacker = "203.0.113.7"; // its own address, so other tests' failures (from 127.0.0.1) do not count
+
+        for (int i = 0; i < LoginThrottle.MAX_FAILURES; i++) {
+            mvc.perform(loginFrom(attacker, login, "wrong-password-" + i))
+                    .andExpect(redirectedUrl("/login?error")).andExpect(unauthenticated());
+        }
+        mvc.perform(loginFrom(attacker, login, PASSWORD))
+                .andExpect(redirectedUrl("/login?blocked")).andExpect(unauthenticated());
+        mvc.perform(get("/login").param("blocked", ""))
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("Слишком много неудачных попыток входа")));
+
+        // The student, from their own address, can still sign in
+        mvc.perform(loginFrom("203.0.113.8", login, PASSWORD)).andExpect(authenticated());
     }
 
     @Test
@@ -371,6 +391,14 @@ class StudentPortalSecurityTests {
                 .andExpect(redirectedUrl(expectedTarget))
                 .andReturn();
         return (MockHttpSession) result.getRequest().getSession(false);
+    }
+
+    /** Sign-in form submitted from the given client address. */
+    private static MockHttpServletRequestBuilder loginFrom(String address, String login, String password) {
+        return post("/login").with(csrf()).with(request -> {
+            request.setRemoteAddr(address);
+            return request;
+        }).param("login", login).param("password", password);
     }
 
     /** A student who has already replaced the temporary password. */

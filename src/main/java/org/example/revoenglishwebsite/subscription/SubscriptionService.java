@@ -69,11 +69,13 @@ public class SubscriptionService {
                                         String complimentaryReason, Long adminId, String formKey) {
         guard.requireAdmin(adminId);
         String key = Inputs.requestKey("assign", formKey);
+        // Lock first, then look for the key: a double-submitted form waits here until the first request has
+        // committed, and then finds its subscription instead of failing on the unique key.
+        lockStudent(studentId);
         Optional<Subscription> existing = subscriptions.findByRequestKey(key);
         if (existing.isPresent()) {
             return new Outcome<>(owned(existing.get(), studentId), false);
         }
-        lockStudent(studentId);
         PricingPlan plan = PricingCatalog.plan(planCode).orElseThrow(() -> new SubscriptionException("Выберите тариф."));
         validatePeriod(startsOn, expiresOn);
         String reason = complimentaryReason == null ? null : Inputs.reason(complimentaryReason, "причину бесплатного абонемента");

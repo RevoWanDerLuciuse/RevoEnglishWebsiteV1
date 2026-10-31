@@ -19,6 +19,9 @@
             <p th:if="${param.error}" class="portal-alert portal-alert--error" role="alert">
                 Неверный логин или пароль. Если не получается войти, напишите преподавателю.
             </p>
+            <p th:if="${param.blocked}" class="portal-alert portal-alert--error" role="alert">
+                Слишком много неудачных попыток входа. Подождите 15&nbsp;минут и&nbsp;попробуйте снова.
+            </p>
             <p th:if="${param.logout}" class="portal-alert" role="status">Вы вышли из кабинета.</p>
             <p th:if="${param.ended}" class="portal-alert" role="status">Сеанс завершён. Войдите снова.</p>
 
